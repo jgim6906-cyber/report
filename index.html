@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PM팀 주간업무보고서</title>
+<title>PM실 주간업무보고서</title>
 
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
@@ -13,171 +13,53 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<!-- Supabase JS client -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   :root{
-    --navy:#152238;
-    --navy-deep:#0c1526;
-    --teal:#2f6f6b;
-    --gold:#c19a52;
-    --gold-light:#eaddc0;
-    --paper:#f6f4ef;
-    --paper-line:#e5ddcd;
-    --card:#ffffff;
-    --ink:#22262e;
-    --ink-soft:#767061;
-    --red:#a13d3d;
-    --shadow-lg:0 18px 40px -18px rgba(21,34,56,0.28);
-    --shadow-sm:0 4px 14px -6px rgba(21,34,56,0.12);
-    --radius:14px;
+    --navy:#152238; --navy-deep:#0c1526; --teal:#2f6f6b; --gold:#c19a52; --gold-light:#eaddc0;
+    --paper:#f6f4ef; --paper-line:#e5ddcd; --card:#ffffff; --ink:#22262e; --ink-soft:#767061; --red:#a13d3d;
+    --shadow-lg:0 18px 40px -18px rgba(21,34,56,0.28); --shadow-sm:0 4px 14px -6px rgba(21,34,56,0.12); --radius:14px;
   }
   *{box-sizing:border-box;}
-  body{
-    margin:0;
-    background:
-      radial-gradient(1200px 500px at 10% -10%, rgba(47,111,107,0.06), transparent 60%),
-      var(--paper);
-    color:var(--ink);
-    font-family:'Noto Sans KR', sans-serif;
-    -webkit-font-smoothing:antialiased;
-  }
+  body{margin:0;background:radial-gradient(1200px 500px at 10% -10%, rgba(47,111,107,0.06), transparent 60%),var(--paper);color:var(--ink);font-family:'Noto Sans KR', sans-serif;-webkit-font-smoothing:antialiased;}
   .app{max-width:1200px;margin:0 auto;padding:28px 20px 70px;}
 
-  /* Header */
-  .header{
-    background:
-      radial-gradient(600px 240px at 88% -30%, rgba(193,154,82,0.22), transparent 60%),
-      linear-gradient(155deg, var(--navy) 0%, var(--navy-deep) 100%);
-    color:#fff;
-    padding:32px 32px 26px;
-    position:relative;
-    overflow:hidden;
-    border-radius:var(--radius);
-    box-shadow:var(--shadow-lg);
-  }
-  .header::after{
-    content:"";
-    position:absolute;
-    right:-50px;top:-60px;
-    width:220px;height:220px;
-    border:1.5px solid rgba(234,221,192,0.16);
-    border-radius:50%;
-  }
-  .header::before{
-    content:"";
-    position:absolute;
-    right:26px;top:26px;
-    width:130px;height:130px;
-    border:1px solid rgba(234,221,192,0.1);
-    border-radius:50%;
-  }
+  .header{background:radial-gradient(600px 240px at 88% -30%, rgba(193,154,82,0.22), transparent 60%),linear-gradient(155deg, var(--navy) 0%, var(--navy-deep) 100%);color:#fff;padding:32px 32px 26px;position:relative;overflow:hidden;border-radius:var(--radius);box-shadow:var(--shadow-lg);}
+  .header::after{content:"";position:absolute;right:-50px;top:-60px;width:220px;height:220px;border:1.5px solid rgba(234,221,192,0.16);border-radius:50%;}
+  .header::before{content:"";position:absolute;right:26px;top:26px;width:130px;height:130px;border:1px solid rgba(234,221,192,0.1);border-radius:50%;}
   .header-top{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px;position:relative;z-index:1;}
-  .eyebrow{
-    font-size:11px;letter-spacing:.3em;color:var(--gold-light);
-    text-transform:uppercase;font-weight:600;margin:0 0 8px;
-    opacity:0.85;
-  }
-  h1{
-    font-family:'Noto Serif KR', serif;
-    font-weight:900;
-    font-size:28px;
-    margin:0;
-    letter-spacing:.01em;
-  }
-  .seal{
-    width:56px;height:56px;border-radius:50%;
-    border:1.5px solid var(--gold);
-    display:flex;align-items:center;justify-content:center;
-    font-family:'Noto Serif KR',serif;font-weight:700;font-size:13px;
-    line-height:1.25;text-align:center;
-    color:var(--gold-light);
-    flex-shrink:0;
-    background:rgba(193,154,82,0.1);
-    box-shadow:0 0 0 4px rgba(193,154,82,0.08);
-  }
-  .dept-line{
-    margin-top:6px;font-size:13px;color:rgba(255,255,255,0.6);
-    letter-spacing:.03em;
-  }
+  .eyebrow{font-size:11px;letter-spacing:.3em;color:var(--gold-light);text-transform:uppercase;font-weight:600;margin:0 0 8px;opacity:0.85;}
+  h1{font-family:'Noto Serif KR', serif;font-weight:900;font-size:28px;margin:0;letter-spacing:.01em;}
+  .seal{width:56px;height:56px;border-radius:50%;border:1.5px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:'Noto Serif KR',serif;font-weight:700;font-size:12px;line-height:1.2;text-align:center;color:var(--gold-light);flex-shrink:0;background:rgba(193,154,82,0.1);box-shadow:0 0 0 4px rgba(193,154,82,0.08);}
+  .dept-line{margin-top:6px;font-size:13px;color:rgba(255,255,255,0.6);letter-spacing:.03em;}
 
-  /* Period nav */
-  .period-bar{
-    margin-top:24px;
-    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
-    position:relative;z-index:1;
-  }
-  .period-nav{
-    display:flex;align-items:center;background:rgba(255,255,255,0.07);
-    border:1px solid rgba(255,255,255,0.16);
-    border-radius:999px;padding:4px;gap:2px;
-  }
-  .period-nav button{
-    width:32px;height:32px;border-radius:50%;border:none;
-    background:transparent;color:#fff;font-size:16px;cursor:pointer;
-    display:flex;align-items:center;justify-content:center;
-    transition:background .15s;
-  }
+  .dept-switcher{display:flex;gap:6px;margin-top:18px;position:relative;z-index:1;flex-wrap:wrap;}
+  .dept-btn{border:1px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.75);border-radius:999px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;}
+  .dept-btn:hover{background:rgba(255,255,255,0.12);}
+  .dept-btn.active{background:var(--gold);border-color:var(--gold);color:var(--navy-deep);}
+  .dept-btn.combined{border-style:dashed;}
+
+  .period-bar{margin-top:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:relative;z-index:1;}
+  .period-nav{display:flex;align-items:center;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.16);border-radius:999px;padding:4px;gap:2px;}
+  .period-nav button{width:32px;height:32px;border-radius:50%;border:none;background:transparent;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;}
   .period-nav button:hover{background:rgba(255,255,255,0.15);}
-  .period-label{
-    font-weight:700;font-size:14.5px;padding:0 14px;white-space:nowrap;
-    font-variant-numeric:tabular-nums;
-  }
-  .today-btn{
-    border:1px solid rgba(255,255,255,0.24);
-    background:transparent;color:#fff;border-radius:999px;
-    padding:8px 16px;font-size:13px;cursor:pointer;font-weight:500;
-    transition:background .15s;
-  }
+  .period-label{font-weight:700;font-size:14.5px;padding:0 14px;white-space:nowrap;font-variant-numeric:tabular-nums;}
+  .today-btn{border:1px solid rgba(255,255,255,0.24);background:transparent;color:#fff;border-radius:999px;padding:8px 16px;font-size:13px;cursor:pointer;font-weight:500;transition:background .15s;}
   .today-btn:hover{background:rgba(255,255,255,0.1);}
-  .week-select{
-    border:1px solid rgba(255,255,255,0.24);
-    background:rgba(255,255,255,0.05);color:#fff;border-radius:999px;
-    padding:8px 14px;font-size:13px;font-family:inherit;cursor:pointer;
-  }
+  .week-select{border:1px solid rgba(255,255,255,0.24);background:rgba(255,255,255,0.05);color:#fff;border-radius:999px;padding:8px 14px;font-size:13px;font-family:inherit;cursor:pointer;}
   .week-select option{color:#111;}
-  .save-state{
-    margin-left:auto;font-size:12px;color:rgba(255,255,255,0.5);
-    display:flex;align-items:center;gap:6px;
-  }
+  .save-state{margin-left:auto;font-size:12px;color:rgba(255,255,255,0.5);display:flex;align-items:center;gap:6px;}
   .dot{width:6px;height:6px;border-radius:50%;background:#7bc47f;transition:background .2s;}
   .dot.busy{background:var(--gold-light);}
   .dot.error{background:#e26a6a;}
-
-  .conn-banner{
-    display:none;
-    margin-top:14px;
-    background:rgba(226,106,106,0.14);
-    border:1px solid rgba(226,106,106,0.4);
-    color:#ffd9d9;
-    padding:10px 14px;border-radius:9px;font-size:12.5px;
-    position:relative;z-index:1;
-  }
+  .conn-banner{display:none;margin-top:14px;background:rgba(226,106,106,0.14);border:1px solid rgba(226,106,106,0.4);color:#ffd9d9;padding:10px 14px;border-radius:9px;font-size:12.5px;position:relative;z-index:1;}
   .conn-banner.show{display:block;}
+  .combined-banner{display:none;margin-top:14px;background:rgba(193,154,82,0.16);border:1px solid rgba(193,154,82,0.4);color:var(--gold-light);padding:10px 14px;border-radius:9px;font-size:12.5px;position:relative;z-index:1;}
+  .combined-banner.show{display:block;}
 
-  /* Shell */
-  .shell{
-    background:var(--card);
-    border-radius:var(--radius);
-    box-shadow:var(--shadow-sm);
-    margin-top:18px;
-    overflow:hidden;
-  }
-
-  /* Tabs */
-  .tabs{
-    display:flex;gap:2px;padding:10px 22px 0;
-    background:linear-gradient(to bottom, #fbfaf7, var(--card));
-    border-bottom:1px solid var(--paper-line);
-  }
-  .tab-btn{
-    display:flex;align-items:center;gap:7px;
-    padding:13px 18px;border:none;background:transparent;
-    font-family:'Noto Serif KR',serif;font-weight:700;font-size:14px;
-    color:var(--ink-soft);cursor:pointer;position:relative;top:1px;
-    border-bottom:3px solid transparent;
-    transition:color .15s;
-  }
+  .shell{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow-sm);margin-top:18px;overflow:hidden;}
+  .tabs{display:flex;gap:2px;padding:10px 22px 0;background:linear-gradient(to bottom, #fbfaf7, var(--card));border-bottom:1px solid var(--paper-line);flex-wrap:wrap;}
+  .tab-btn{display:flex;align-items:center;gap:7px;padding:13px 18px;border:none;background:transparent;font-family:'Noto Serif KR',serif;font-weight:700;font-size:14px;color:var(--ink-soft);cursor:pointer;position:relative;top:1px;border-bottom:3px solid transparent;transition:color .15s;}
   .tab-btn svg{width:15px;height:15px;opacity:.65;}
   .tab-btn:hover{color:var(--navy);}
   .tab-btn.active{color:var(--navy);border-bottom-color:var(--gold);}
@@ -185,111 +67,68 @@
 
   .panel{padding:22px;display:none;}
   .panel.active{display:block;}
-
   .panel-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
   .panel-title{font-family:'Noto Serif KR',serif;font-weight:700;font-size:17px;color:var(--navy);}
   .panel-desc{font-size:12.5px;color:var(--ink-soft);margin-top:3px;}
-  .clear-btn{
-    font-size:12px;color:var(--red);background:none;border:1px solid #e1cccc;
-    padding:7px 13px;border-radius:7px;cursor:pointer;transition:background .15s;
-  }
+  .clear-btn{font-size:12px;color:var(--red);background:none;border:1px solid #e1cccc;padding:7px 13px;border-radius:7px;cursor:pointer;transition:background .15s;}
   .clear-btn:hover{background:#fbf0f0;}
+  .add-btn{font-size:12px;color:#fff;background:var(--teal);border:none;padding:8px 15px;border-radius:7px;cursor:pointer;font-weight:700;transition:opacity .15s;}
+  .add-btn:hover{opacity:.9;}
 
-  /* Table shared */
   .table-wrap{overflow-x:auto;border:1px solid var(--paper-line);border-radius:11px;background:#fff;}
   table{border-collapse:collapse;width:100%;min-width:640px;}
   th,td{border:1px solid var(--paper-line);padding:0;}
-  thead th{
-    background:#eef2f4;color:var(--navy);font-size:12.5px;font-weight:700;
-    padding:11px 8px;text-align:center;white-space:nowrap;
-    position:sticky;top:0;
-  }
+  thead th{background:#eef2f4;color:var(--navy);font-size:12.5px;font-weight:700;padding:11px 8px;text-align:center;white-space:nowrap;position:sticky;top:0;}
   tbody tr:hover td{background:#fbfaf5;}
-  .name-cell{
-    background:#faf8f2;font-weight:700;font-size:13px;color:var(--navy);
-    padding:12px 10px;text-align:center;vertical-align:middle;white-space:nowrap;
-    min-width:90px;
-  }
+  .team-row td{background:#f4f1e9 !important;font-weight:700;color:var(--navy);text-align:left;padding:9px 14px;font-family:'Noto Serif KR',serif;font-size:13px;}
+  .name-cell{background:#faf8f2;font-weight:700;font-size:13px;color:var(--navy);padding:12px 10px;text-align:center;vertical-align:middle;white-space:nowrap;min-width:90px;}
   tbody tr:hover .name-cell{background:#f5f0e4;}
   .name-cell .rank{display:block;font-weight:500;font-size:11px;color:var(--ink-soft);margin-top:2px;}
-  textarea{
-    width:100%;min-height:96px;border:none;resize:vertical;
-    padding:11px 13px;font-family:inherit;font-size:13px;line-height:1.6;
-    outline:none;background:transparent;
-  }
+  textarea{width:100%;min-height:96px;border:none;resize:vertical;padding:11px 13px;font-family:inherit;font-size:13px;line-height:1.6;outline:none;background:transparent;}
   textarea:focus{background:#fffdf5;box-shadow:inset 0 0 0 1.5px var(--gold-light);}
+  textarea:disabled{color:var(--ink);opacity:.85;background:#fbfaf7;}
   textarea.note-area{min-height:64px;}
 
-  /* Attendance grid */
-  .cat-cell{
-    background:#f4f1e9;color:var(--ink-soft);font-size:12px;font-weight:700;
-    text-align:center;padding:9px;white-space:nowrap;
-  }
+  .cat-cell{background:#f4f1e9;color:var(--ink-soft);font-size:12px;font-weight:700;text-align:center;padding:9px;white-space:nowrap;}
   .chk-cell{text-align:center;padding:0;width:52px;}
-  .chk-cell label{
-    display:flex;align-items:center;justify-content:center;
-    height:42px;cursor:pointer;
-  }
+  .chk-cell label{display:flex;align-items:center;justify-content:center;height:42px;cursor:pointer;}
   .chk-cell input{width:18px;height:18px;accent-color:var(--teal);cursor:pointer;}
+  .chk-cell input:disabled{cursor:default;opacity:.7;}
   .day-head{width:52px;}
 
-  /* Daily summary tiles */
-  .summary-card{
-    background:linear-gradient(155deg,#fbf8f0,var(--card));
-    border:1px solid var(--paper-line);
-    border-radius:12px;
-    padding:18px 20px 20px;
-    margin-bottom:18px;
-    box-shadow:var(--shadow-sm);
-  }
-  .summary-head{
-    display:flex;align-items:center;gap:8px;margin-bottom:14px;
-  }
-  .summary-head .badge{
-    width:26px;height:26px;border-radius:50%;background:var(--teal);color:#fff;
-    display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;
-  }
+  .summary-card{background:linear-gradient(155deg,#fbf8f0,var(--card));border:1px solid var(--paper-line);border-radius:12px;padding:18px 20px 20px;margin-bottom:18px;box-shadow:var(--shadow-sm);}
+  .summary-head{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+  .summary-head .badge{width:26px;height:26px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
   .summary-title{font-family:'Noto Serif KR',serif;font-weight:700;font-size:14.5px;color:var(--navy);}
   .summary-sub{font-size:11.5px;color:var(--ink-soft);}
   .summary-grid{overflow-x:auto;}
   .sg-table{width:100%;min-width:520px;border-collapse:separate;border-spacing:6px;}
   .sg-table th{border:none;background:none;color:var(--ink-soft);font-size:11.5px;font-weight:600;padding:0 0 4px;text-align:center;}
   .sg-table td{border:none;text-align:center;padding:0;}
-  .sg-row-label{
-    font-size:12px;font-weight:700;color:var(--navy);text-align:left !important;
-    padding-right:8px !important;white-space:nowrap;width:64px;
-  }
-  .tile{
-    background:#fff;border:1px solid var(--paper-line);border-radius:9px;
-    padding:9px 4px;transition:all .15s;
-  }
+  .sg-row-label{font-size:12px;font-weight:700;color:var(--navy);text-align:left !important;padding-right:8px !important;white-space:nowrap;width:64px;}
+  .tile{background:#fff;border:1px solid var(--paper-line);border-radius:9px;padding:9px 4px;transition:all .15s;}
   .tile .n{font-family:'Noto Serif KR',serif;font-weight:900;font-size:19px;color:var(--navy);line-height:1;}
   .tile .n.zero{color:#c7c2b4;}
   .tile.has-count{border-color:var(--gold);background:#fbf6ea;}
   .tile.has-count .n{color:#8a6a24;}
 
-  /* Excel button */
   .toolbar{display:flex;justify-content:flex-end;align-items:center;gap:12px;padding:16px 22px 0;flex-wrap:wrap;}
   .hint-inline{font-size:11.5px;color:var(--ink-soft);margin-right:auto;}
-  .xlsx-btn{
-    display:flex;align-items:center;gap:8px;
-    background:var(--navy);color:#fff;border:none;
-    padding:11px 20px;border-radius:9px;font-size:13.5px;font-weight:700;
-    cursor:pointer;font-family:inherit;transition:background .15s,transform .1s;
-    box-shadow:0 8px 18px -8px rgba(21,34,56,0.45);
-  }
+  .xlsx-btn{display:flex;align-items:center;gap:8px;background:var(--navy);color:#fff;border:none;padding:11px 20px;border-radius:9px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s,transform .1s;box-shadow:0 8px 18px -8px rgba(21,34,56,0.45);}
   .xlsx-btn:hover{background:var(--navy-deep);}
   .xlsx-btn:active{transform:translateY(1px);}
   .xlsx-btn svg{width:15px;height:15px;}
 
+  .roster-input{width:100%;border:1px solid transparent;background:transparent;padding:10px 12px;font-family:inherit;font-size:13px;outline:none;border-radius:6px;}
+  .roster-input:focus{background:#fffdf5;border-color:var(--gold-light);}
+  .roster-del{font-size:12px;color:var(--red);background:none;border:1px solid #e1cccc;padding:6px 12px;border-radius:6px;cursor:pointer;}
+  .roster-del:hover{background:#fbf0f0;}
+  .roster-mgr-cell{text-align:center;}
+  .roster-mgr-cell input{width:17px;height:17px;accent-color:var(--teal);cursor:pointer;}
+
   @media (max-width:640px){
-    .app{padding:16px 12px 50px;}
-    .header{padding:24px 20px 22px;}
-    .tabs{padding:8px 14px 0;}
-    .panel{padding:16px;}
-    .toolbar{padding:14px 16px 0;}
-    h1{font-size:22px;}
-    .tab-btn{padding:11px 12px;font-size:13px;}
+    .app{padding:16px 12px 50px;} .header{padding:24px 20px 22px;} .tabs{padding:8px 14px 0;}
+    .panel{padding:16px;} .toolbar{padding:14px 16px 0;} h1{font-size:22px;} .tab-btn{padding:11px 12px;font-size:13px;}
     .summary-card{padding:14px 14px 16px;}
   }
 </style>
@@ -300,11 +139,17 @@
   <div class="header">
     <div class="header-top">
       <div>
-        <p class="eyebrow">Weekly Work Report</p>
+        <p class="eyebrow">PM실 · Weekly Work Report</p>
         <h1>주간업무보고서</h1>
-        <p class="dept-line">부 서 명 : PM팀</p>
+        <p class="dept-line" id="deptLine">부 서 명 : 업무PM팀</p>
       </div>
-      <div class="seal">PM<br>팀</div>
+      <div class="seal" id="seal">PM<br>실</div>
+    </div>
+
+    <div class="dept-switcher" id="deptSwitcher">
+      <button class="dept-btn active" data-dept="biz">업무PM팀</button>
+      <button class="dept-btn" data-dept="construction">공사PM팀</button>
+      <button class="dept-btn combined" data-dept="combined">PM실 (통합)</button>
     </div>
 
     <div class="period-bar">
@@ -321,10 +166,13 @@
     <div class="conn-banner" id="connBanner">
       ⚠ 서버(Supabase)에 연결할 수 없습니다. index.html 상단의 SUPABASE_URL / SUPABASE_ANON_KEY 설정을 확인해주세요. 현재 입력 내용은 저장되지 않습니다.
     </div>
+    <div class="combined-banner" id="combinedBanner">
+      ℹ PM실(통합) 화면은 업무PM팀 · 공사PM팀 데이터를 함께 보는 조회 전용 화면입니다. 수정은 각 부서 탭에서 해주세요.
+    </div>
   </div>
 
   <div class="shell">
-    <div class="tabs">
+    <div class="tabs" id="tabs">
       <button class="tab-btn active" data-tab="work">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h11l5 5v11a1 1 0 01-1 1H4a1 1 0 01-1-1V5a1 1 0 011-1z"/><path d="M14 4v5h5"/></svg>
         업무내용
@@ -337,17 +185,20 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
         연차·외근·도시락
       </button>
+      <button class="tab-btn" data-tab="roster" id="tabBtnRoster">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        인원관리
+      </button>
     </div>
 
     <div class="toolbar">
-      <span class="hint-inline">이 데이터는 부서원 전체에게 공유되어 누구나 조회·수정할 수 있습니다.</span>
+      <span class="hint-inline" id="hintInline">이 데이터는 부서원 전체에게 공유되어 누구나 조회·수정할 수 있습니다.</span>
       <button class="xlsx-btn" id="exportBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
         엑셀로 다운로드
       </button>
     </div>
 
-    <!-- TAB 1: 업무내용 -->
     <div class="panel active" id="panel-work">
       <div class="panel-head">
         <div>
@@ -364,7 +215,6 @@
       </div>
     </div>
 
-    <!-- TAB 2: 특이사항 -->
     <div class="panel" id="panel-note">
       <div class="panel-head">
         <div>
@@ -381,7 +231,6 @@
       </div>
     </div>
 
-    <!-- TAB 3: 근태 -->
     <div class="panel" id="panel-att">
       <div class="panel-head">
         <div>
@@ -393,12 +242,10 @@
 
       <div class="summary-card">
         <div class="summary-head">
-          <span class="badge">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
-          </span>
+          <span class="badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4"><path d="M3 12h18M3 6h18M3 18h18"/></svg></span>
           <div>
             <div class="summary-title">요일별 합계</div>
-            <div class="summary-sub">도시락 주문 등에 참고하세요 — 해당 요일에 몇 명인지 자동 집계됩니다.</div>
+            <div class="summary-sub" id="summarySub">도시락 주문 등에 참고하세요 — 해당 요일에 몇 명인지 자동 집계됩니다.</div>
           </div>
         </div>
         <div class="summary-grid">
@@ -409,7 +256,7 @@
         </div>
       </div>
 
-      <div class="table-wrap">
+      <div class="table-wrap" id="attTableWrap">
         <table>
           <thead>
             <tr>
@@ -421,235 +268,236 @@
         </table>
       </div>
     </div>
+
+    <div class="panel" id="panel-roster">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">인원 관리</div>
+          <div class="panel-desc">신규 입사자 추가, 직급 변경, 퇴사자 삭제가 가능합니다. 변경 즉시 다른 탭의 근태 집계에 반영됩니다.</div>
+        </div>
+        <button class="add-btn" id="addRosterRow">+ 인원 추가</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th style="width:130px;">직급</th><th>이름</th><th style="width:80px;">부서장</th><th style="width:80px;">삭제</th></tr></thead>
+          <tbody id="rosterBody"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
 </div>
 
 <script>
 /* =========================================================
-   Supabase 설정
-   ---------------------------------------------------------
-   1) https://supabase.com 에서 프로젝트를 생성하세요.
-   2) 프로젝트 설정(Project Settings) > API 메뉴에서
-      "Project URL"과 "anon public" key를 복사해 아래에 붙여넣으세요.
-   3) SQL Editor에서 supabase-schema.sql 파일 내용을 실행해
-      weekly_reports 테이블을 만드세요.
+   Supabase 설정 — Project URL / anon public key를 입력하세요.
    ========================================================= */
 const SUPABASE_URL = 'https://qnythgtyihxvmwttsotg.supabase.co';
-
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFueXRoZ3R5aWh4dm13dHRzb3RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyOTcxNTUsImV4cCI6MjEwMjg3MzE1NX0.tPIOAeuVHiTfWmcj9VzxI6buv-8Zjrb2s9EEErsyVJA';
-
 const supabaseClient = (SUPABASE_URL.includes('YOUR-PROJECT-REF') || !window.supabase)
   ? null
   : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const ROSTER = [
-  {rank:'실장', name:'강수철', manager:true},
-  {rank:'부장', name:'정병현', manager:true},
-  {rank:'수석', name:'박근호'},
-  {rank:'책임', name:'김영식'},
-  {rank:'책임', name:'정준석'},
-  {rank:'책임', name:'권록율'},
-  {rank:'선임', name:'황정연'},
-  {rank:'선임', name:'오인순'},
-  {rank:'대리', name:'김진수'},
-  {rank:'주임', name:'한혜진'},
-  {rank:'주임', name:'이우근'},
-];
 const DAYS = ['월','화','수','목','금'];
 const CATS = ['연차','외근','도시락'];
+const DEPTS = ['biz','construction'];
+const DEPT_LABELS = {biz:'업무PM팀', construction:'공사PM팀', combined:'PM실 (통합)'};
 
 function pad(n){return String(n).padStart(2,'0');}
-function getMonday(d){
-  const nd = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const day = nd.getDay();
-  const diff = day===0 ? -6 : 1-day;
-  nd.setDate(nd.getDate()+diff);
-  return nd;
-}
+function getMonday(d){const nd=new Date(d.getFullYear(),d.getMonth(),d.getDate());const day=nd.getDay();const diff=day===0?-6:1-day;nd.setDate(nd.getDate()+diff);return nd;}
 function addDays(d,n){const nd=new Date(d);nd.setDate(nd.getDate()+n);return nd;}
 function isoKey(d){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;}
 function krDate(d){return `${d.getFullYear()}년 ${pad(d.getMonth()+1)}월 ${pad(d.getDate())}일`;}
-
-function blankData(){
-  const people = {};
-  ROSTER.forEach(p=>{
-    people[p.name] = {
-      prev:'', cur:'', note:'',
-      att: {연차:[false,false,false,false,false], 외근:[false,false,false,false,false], 도시락:[false,false,false,false,false]}
-    };
-  });
-  return {people};
-}
+function genId(){return 'p_'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);}
+function escapeHtml(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function blankPersonData(){return {prev:'',cur:'',note:'',att:{연차:[false,false,false,false,false],외근:[false,false,false,false,false],도시락:[false,false,false,false,false]}};}
 
 let currentMonday = getMonday(new Date());
-let data = blankData();
-let saveTimer = null;
-let realtimeChannel = null;
-let applyingRemoteUpdate = false;
+let currentDept = 'biz';
+let state = {
+  biz: {roster:[], weekData:{people:{}}},
+  construction: {roster:[], weekData:{people:{}}}
+};
+let saveWeekTimers = {biz:null, construction:null};
+let saveRosterTimers = {biz:null, construction:null};
+let rtChannel = null;
 
-function weekKey(monday){return isoKey(monday);}
+function ensurePeopleData(deptKey){
+  const s = state[deptKey];
+  s.roster.forEach(p=>{ if(!s.weekData.people[p.id]) s.weekData.people[p.id] = blankPersonData(); });
+}
 
-function setSaveState(state){
+function setSaveState(kind){
   const dot = document.getElementById('saveDot');
   const text = document.getElementById('saveText');
   const banner = document.getElementById('connBanner');
-  if(state==='saving'){dot.className='dot busy';text.textContent='저장 중...';banner.classList.remove('show');}
-  else if(state==='saved'){dot.className='dot';text.textContent='저장됨';banner.classList.remove('show');}
-  else if(state==='error'){dot.className='dot error';text.textContent='저장 실패';banner.classList.add('show');}
-  else if(state==='noconn'){dot.className='dot error';text.textContent='서버 연결 안 됨';banner.classList.add('show');}
+  if(kind==='saving'){dot.className='dot busy';text.textContent='저장 중...';banner.classList.remove('show');}
+  else if(kind==='saved'){dot.className='dot';text.textContent='저장됨';banner.classList.remove('show');}
+  else if(kind==='error'){dot.className='dot error';text.textContent='저장 실패';banner.classList.add('show');}
+  else if(kind==='noconn'){dot.className='dot error';text.textContent='서버 연결 안 됨';banner.classList.add('show');}
+  else if(kind==='readonly'){dot.className='dot';text.textContent='조회 전용';}
 }
 
-async function loadWeek(monday){
-  const key = weekKey(monday);
-
-  if(!supabaseClient){
-    data = blankData();
-    renderPeriod();
-    renderAll();
-    setSaveState('noconn');
-    subscribeRealtime(key);
-    return;
-  }
-
+/* ---------------- 데이터 로드/저장 ---------------- */
+async function loadRoster(deptKey){
+  if(!supabaseClient){ state[deptKey].roster = []; return; }
   try{
-    const {data: rows, error} = await supabaseClient
-      .from('weekly_reports')
-      .select('data')
-      .eq('week_key', key)
-      .maybeSingle();
+    const {data:row, error} = await supabaseClient.from('rosters').select('people').eq('dept_key', deptKey).maybeSingle();
     if(error) throw error;
-    data = (rows && rows.data) ? rows.data : blankData();
-  }catch(e){
-    console.error(e);
-    data = blankData();
-    setSaveState('error');
-  }
+    state[deptKey].roster = (row && row.people) ? row.people : [];
+  }catch(e){ console.error(e); state[deptKey].roster = []; }
+}
 
-  ROSTER.forEach(p=>{
-    if(!data.people[p.name]){
-      data.people[p.name] = {prev:'',cur:'',note:'',att:{연차:[false,false,false,false,false],외근:[false,false,false,false,false],도시락:[false,false,false,false,false]}};
-    }
-  });
+async function loadWeekData(deptKey, monday){
+  const key = isoKey(monday);
+  if(!supabaseClient){ state[deptKey].weekData = {people:{}}; return; }
+  try{
+    const {data:row, error} = await supabaseClient.from('weekly_reports').select('data').eq('dept_key', deptKey).eq('week_key', key).maybeSingle();
+    if(error) throw error;
+    state[deptKey].weekData = (row && row.data) ? row.data : {people:{}};
+  }catch(e){ console.error(e); state[deptKey].weekData = {people:{}}; }
+}
+
+async function loadAll(monday){
+  if(!supabaseClient){ setSaveState('noconn'); DEPTS.forEach(d=>{state[d].roster=[];state[d].weekData={people:{}};}); renderPeriod(); renderAll(); return; }
+  await Promise.all(DEPTS.map(d=>loadRoster(d)));
+  await Promise.all(DEPTS.map(d=>loadWeekData(d, monday)));
+  DEPTS.forEach(d=>ensurePeopleData(d));
   renderPeriod();
   renderAll();
-  if(supabaseClient) setSaveState('saved');
-  subscribeRealtime(key);
+  setSaveState(currentDept==='combined' ? 'readonly' : 'saved');
+  subscribeRealtime();
 }
 
-async function saveWeek(){
+async function saveWeekData(deptKey){
   if(!supabaseClient){ setSaveState('noconn'); return; }
   setSaveState('saving');
-  const key = weekKey(currentMonday);
+  const key = isoKey(currentMonday);
   try{
-    const {error} = await supabaseClient
-      .from('weekly_reports')
-      .upsert({week_key: key, data: data, updated_at: new Date().toISOString()}, {onConflict:'week_key'});
+    const {error} = await supabaseClient.from('weekly_reports')
+      .upsert({dept_key:deptKey, week_key:key, data:state[deptKey].weekData, updated_at:new Date().toISOString()}, {onConflict:'dept_key,week_key'});
     if(error) throw error;
     setSaveState('saved');
     refreshWeekList();
-  }catch(e){
-    console.error(e);
-    setSaveState('error');
-  }
+  }catch(e){ console.error(e); setSaveState('error'); }
 }
-function queueSave(){
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(saveWeek, 500);
-}
+function queueSaveWeek(deptKey){ clearTimeout(saveWeekTimers[deptKey]); saveWeekTimers[deptKey] = setTimeout(()=>saveWeekData(deptKey), 500); }
 
-/* 다른 부서원의 실시간 변경사항을 받아 화면에 반영 */
-function subscribeRealtime(key){
+async function saveRoster(deptKey){
+  if(!supabaseClient){ setSaveState('noconn'); return; }
+  setSaveState('saving');
+  try{
+    const {error} = await supabaseClient.from('rosters')
+      .upsert({dept_key:deptKey, people:state[deptKey].roster, updated_at:new Date().toISOString()}, {onConflict:'dept_key'});
+    if(error) throw error;
+    setSaveState('saved');
+  }catch(e){ console.error(e); setSaveState('error'); }
+}
+function queueSaveRoster(deptKey){ clearTimeout(saveRosterTimers[deptKey]); saveRosterTimers[deptKey] = setTimeout(()=>saveRoster(deptKey), 500); }
+
+function subscribeRealtime(){
   if(!supabaseClient) return;
-  if(realtimeChannel){
-    supabaseClient.removeChannel(realtimeChannel);
-    realtimeChannel = null;
-  }
-  realtimeChannel = supabaseClient
-    .channel('weekly_reports_'+key)
-    .on('postgres_changes',
-      {event:'*', schema:'public', table:'weekly_reports', filter:`week_key=eq.${key}`},
-      (payload)=>{
-        if(!payload.new || !payload.new.data) return;
-        applyingRemoteUpdate = true;
-        data = payload.new.data;
-        ROSTER.forEach(p=>{
-          if(!data.people[p.name]){
-            data.people[p.name] = {prev:'',cur:'',note:'',att:{연차:[false,false,false,false,false],외근:[false,false,false,false,false],도시락:[false,false,false,false,false]}};
-          }
-        });
-        renderAll();
-        applyingRemoteUpdate = false;
-      }
-    )
+  if(rtChannel){ supabaseClient.removeChannel(rtChannel); rtChannel = null; }
+  const key = isoKey(currentMonday);
+  rtChannel = supabaseClient.channel('pm_room_'+key)
+    .on('postgres_changes', {event:'*', schema:'public', table:'weekly_reports'}, (payload)=>{
+      const row = payload.new;
+      if(!row || row.week_key !== key) return;
+      if(!DEPTS.includes(row.dept_key)) return;
+      state[row.dept_key].weekData = row.data || {people:{}};
+      ensurePeopleData(row.dept_key);
+      renderAll();
+    })
+    .on('postgres_changes', {event:'*', schema:'public', table:'rosters'}, (payload)=>{
+      const row = payload.new;
+      if(!row || !DEPTS.includes(row.dept_key)) return;
+      state[row.dept_key].roster = row.people || [];
+      ensurePeopleData(row.dept_key);
+      renderAll();
+    })
     .subscribe();
 }
 
+/* ---------------- 렌더링 ---------------- */
 function renderPeriod(){
   const friday = addDays(currentMonday,4);
   document.getElementById('periodLabel').textContent = `${krDate(currentMonday)} ~ ${krDate(friday)}`;
 }
 
+function updateHeaderForDept(){
+  document.getElementById('deptLine').textContent = `부 서 명 : ${DEPT_LABELS[currentDept]}`;
+  const seal = document.getElementById('seal');
+  seal.innerHTML = currentDept==='combined' ? 'PM<br>실' : (currentDept==='biz' ? '업무<br>PM' : '공사<br>PM');
+  document.querySelectorAll('.dept-btn').forEach(b=>b.classList.toggle('active', b.dataset.dept===currentDept));
+  const isCombined = currentDept==='combined';
+  document.getElementById('tabBtnRoster').style.display = isCombined ? 'none' : '';
+  document.querySelectorAll('.clear-btn').forEach(b=>b.style.display = isCombined ? 'none' : '');
+  document.getElementById('addRosterRow').style.display = isCombined ? 'none' : '';
+  document.getElementById('attTableWrap').style.display = isCombined ? 'none' : '';
+  document.getElementById('combinedBanner').classList.toggle('show', isCombined);
+  document.getElementById('hintInline').textContent = isCombined
+    ? 'PM실 통합 화면은 조회 전용입니다. 각 부서 탭에서 수정해주세요.'
+    : '이 데이터는 부서원 전체에게 공유되어 누구나 조회·수정할 수 있습니다.';
+  document.getElementById('summarySub').textContent = isCombined
+    ? '업무PM팀 + 공사PM팀 전체 인원 기준 합계입니다.'
+    : '도시락 주문 등에 참고하세요 — 해당 요일에 몇 명인지 자동 집계됩니다.';
+  // roster 탭이 활성 상태였는데 combined로 바뀐 경우 work 탭으로 전환
+  if(isCombined && document.getElementById('tabBtnRoster').classList.contains('active')){
+    switchTab('work');
+  }
+}
+
 function renderAll(){
-  renderWork();
-  renderNote();
-  renderAtt();
-  renderSummary();
+  if(currentDept==='combined'){
+    renderCombinedWork(); renderCombinedNote(); renderCombinedSummary();
+  }else{
+    renderWork(currentDept); renderNote(currentDept); renderAtt(currentDept); renderSummary(currentDept); renderRoster(currentDept);
+  }
 }
 
-function renderWork(){
-  const tbody = document.getElementById('workBody');
-  tbody.innerHTML = '';
-  ROSTER.forEach(p=>{
+function renderWork(deptKey){
+  const tbody = document.getElementById('workBody'); tbody.innerHTML='';
+  const roster = state[deptKey].roster, pdata = state[deptKey].weekData.people;
+  roster.forEach(p=>{
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td class="name-cell">${p.name}<span class="rank">${p.rank}</span></td>
-      <td><textarea data-person="${p.name}" data-field="prev">${escapeHtml(data.people[p.name].prev)}</textarea></td>
-      <td><textarea data-person="${p.name}" data-field="cur">${escapeHtml(data.people[p.name].cur)}</textarea></td>
-    `;
+      <td class="name-cell">${escapeHtml(p.name)}<span class="rank">${escapeHtml(p.rank)}</span></td>
+      <td><textarea data-id="${p.id}" data-field="prev">${escapeHtml(pdata[p.id].prev)}</textarea></td>
+      <td><textarea data-id="${p.id}" data-field="cur">${escapeHtml(pdata[p.id].cur)}</textarea></td>`;
     tbody.appendChild(tr);
   });
   tbody.querySelectorAll('textarea').forEach(el=>{
-    el.addEventListener('input', ()=>{
-      data.people[el.dataset.person][el.dataset.field] = el.value;
-      queueSave();
-    });
+    el.addEventListener('input', ()=>{ state[deptKey].weekData.people[el.dataset.id][el.dataset.field]=el.value; queueSaveWeek(deptKey); });
   });
 }
 
-function renderNote(){
-  const tbody = document.getElementById('noteBody');
-  tbody.innerHTML = '';
-  ROSTER.forEach(p=>{
+function renderNote(deptKey){
+  const tbody = document.getElementById('noteBody'); tbody.innerHTML='';
+  const roster = state[deptKey].roster, pdata = state[deptKey].weekData.people;
+  roster.forEach(p=>{
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td class="name-cell">${p.name}<span class="rank">${p.rank}</span></td>
-      <td><textarea class="note-area" data-person="${p.name}" data-field="note">${escapeHtml(data.people[p.name].note)}</textarea></td>
-    `;
+      <td class="name-cell">${escapeHtml(p.name)}<span class="rank">${escapeHtml(p.rank)}</span></td>
+      <td><textarea class="note-area" data-id="${p.id}" data-field="note">${escapeHtml(pdata[p.id].note)}</textarea></td>`;
     tbody.appendChild(tr);
   });
   tbody.querySelectorAll('textarea').forEach(el=>{
-    el.addEventListener('input', ()=>{
-      data.people[el.dataset.person][el.dataset.field] = el.value;
-      queueSave();
-    });
+    el.addEventListener('input', ()=>{ state[deptKey].weekData.people[el.dataset.id][el.dataset.field]=el.value; queueSaveWeek(deptKey); });
   });
 }
 
-function renderAtt(){
-  const tbody = document.getElementById('attBody');
-  tbody.innerHTML = '';
-  ROSTER.forEach(p=>{
-    CATS.forEach((cat, ci)=>{
+function renderAtt(deptKey){
+  const tbody = document.getElementById('attBody'); tbody.innerHTML='';
+  const roster = state[deptKey].roster, pdata = state[deptKey].weekData.people;
+  roster.forEach(p=>{
+    CATS.forEach((cat,ci)=>{
       const tr = document.createElement('tr');
       let rowHtml = '';
-      if(ci===0){
-        rowHtml += `<td class="name-cell" rowspan="3">${p.name}<span class="rank">${p.rank}</span></td>`;
-      }
+      if(ci===0) rowHtml += `<td class="name-cell" rowspan="3">${escapeHtml(p.name)}<span class="rank">${escapeHtml(p.rank)}</span></td>`;
       rowHtml += `<td class="cat-cell">${cat}</td>`;
-      DAYS.forEach((d, di)=>{
-        const checked = data.people[p.name].att[cat][di] ? 'checked' : '';
-        rowHtml += `<td class="chk-cell"><label><input type="checkbox" data-person="${p.name}" data-cat="${cat}" data-day="${di}" ${checked}></label></td>`;
+      DAYS.forEach((d,di)=>{
+        const checked = pdata[p.id].att[cat][di] ? 'checked' : '';
+        rowHtml += `<td class="chk-cell"><label><input type="checkbox" data-id="${p.id}" data-cat="${cat}" data-day="${di}" ${checked}></label></td>`;
       });
       tr.innerHTML = rowHtml;
       tbody.appendChild(tr);
@@ -657,260 +505,285 @@ function renderAtt(){
   });
   tbody.querySelectorAll('input[type=checkbox]').forEach(el=>{
     el.addEventListener('change', ()=>{
-      data.people[el.dataset.person].att[el.dataset.cat][+el.dataset.day] = el.checked;
-      renderSummary();
-      queueSave();
+      state[deptKey].weekData.people[el.dataset.id].att[el.dataset.cat][+el.dataset.day] = el.checked;
+      renderSummary(deptKey);
+      queueSaveWeek(deptKey);
     });
   });
 }
 
-function dayCount(cat, di){
-  return ROSTER.filter(p=>data.people[p.name].att[cat][di]).length;
+function dayCount(deptKey, cat, di){
+  const roster = state[deptKey].roster, pdata = state[deptKey].weekData.people;
+  return roster.filter(p => pdata[p.id] && pdata[p.id].att[cat][di]).length;
 }
+function combinedDayCount(cat, di){ return DEPTS.reduce((sum,d)=>sum+dayCount(d,cat,di), 0); }
 
-function renderSummary(){
-  const tbody = document.getElementById('summaryBody');
-  tbody.innerHTML = '';
+function renderSummary(deptKey){
+  const tbody = document.getElementById('summaryBody'); tbody.innerHTML='';
   CATS.forEach(cat=>{
     const tr = document.createElement('tr');
     let rowHtml = `<td class="sg-row-label">${cat}</td>`;
-    DAYS.forEach((d, di)=>{
-      const count = dayCount(cat, di);
-      const cls = count>0 ? 'tile has-count' : 'tile';
-      const numCls = count>0 ? 'n' : 'n zero';
+    DAYS.forEach((d,di)=>{
+      const count = dayCount(deptKey, cat, di);
+      const cls = count>0 ? 'tile has-count':'tile', numCls = count>0 ? 'n':'n zero';
       rowHtml += `<td><div class="${cls}"><div class="${numCls}">${count}</div></div></td>`;
     });
-    tr.innerHTML = rowHtml;
+    tr.innerHTML = rowHtml; tbody.appendChild(tr);
+  });
+}
+
+function renderCombinedSummary(){
+  const tbody = document.getElementById('summaryBody'); tbody.innerHTML='';
+  CATS.forEach(cat=>{
+    const tr = document.createElement('tr');
+    let rowHtml = `<td class="sg-row-label">${cat}</td>`;
+    DAYS.forEach((d,di)=>{
+      const count = combinedDayCount(cat, di);
+      const cls = count>0 ? 'tile has-count':'tile', numCls = count>0 ? 'n':'n zero';
+      rowHtml += `<td><div class="${cls}"><div class="${numCls}">${count}</div></div></td>`;
+    });
+    tr.innerHTML = rowHtml; tbody.appendChild(tr);
+  });
+}
+
+function renderCombinedWork(){
+  const tbody = document.getElementById('workBody'); tbody.innerHTML='';
+  DEPTS.forEach(dept=>{
+    const trh = document.createElement('tr'); trh.className='team-row';
+    trh.innerHTML = `<td colspan="3">${DEPT_LABELS[dept]}</td>`;
+    tbody.appendChild(trh);
+    const roster = state[dept].roster, pdata = state[dept].weekData.people;
+    roster.forEach(p=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="name-cell">${escapeHtml(p.name)}<span class="rank">${escapeHtml(p.rank)}</span></td>
+        <td><textarea disabled>${escapeHtml(pdata[p.id].prev)}</textarea></td>
+        <td><textarea disabled>${escapeHtml(pdata[p.id].cur)}</textarea></td>`;
+      tbody.appendChild(tr);
+    });
+  });
+}
+
+function renderCombinedNote(){
+  const tbody = document.getElementById('noteBody'); tbody.innerHTML='';
+  DEPTS.forEach(dept=>{
+    const trh = document.createElement('tr'); trh.className='team-row';
+    trh.innerHTML = `<td colspan="2">${DEPT_LABELS[dept]}</td>`;
+    tbody.appendChild(trh);
+    const roster = state[dept].roster, pdata = state[dept].weekData.people;
+    roster.forEach(p=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="name-cell">${escapeHtml(p.name)}<span class="rank">${escapeHtml(p.rank)}</span></td>
+        <td><textarea class="note-area" disabled>${escapeHtml(pdata[p.id].note)}</textarea></td>`;
+      tbody.appendChild(tr);
+    });
+  });
+}
+
+function renderRoster(deptKey){
+  const tbody = document.getElementById('rosterBody'); tbody.innerHTML='';
+  state[deptKey].roster.forEach(p=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" class="roster-input" data-id="${p.id}" data-field="rank" value="${escapeHtml(p.rank)}" placeholder="직급"></td>
+      <td><input type="text" class="roster-input" data-id="${p.id}" data-field="name" value="${escapeHtml(p.name)}" placeholder="이름"></td>
+      <td class="roster-mgr-cell"><input type="checkbox" class="roster-mgr" data-id="${p.id}" ${p.manager?'checked':''}></td>
+      <td style="text-align:center;"><button class="roster-del" data-id="${p.id}">삭제</button></td>`;
     tbody.appendChild(tr);
   });
+  tbody.querySelectorAll('.roster-input').forEach(el=>{
+    el.addEventListener('input', ()=>{
+      const person = state[deptKey].roster.find(x=>x.id===el.dataset.id);
+      if(person){ person[el.dataset.field] = el.value; queueSaveRoster(deptKey); }
+    });
+  });
+  tbody.querySelectorAll('.roster-mgr').forEach(el=>{
+    el.addEventListener('change', ()=>{
+      const person = state[deptKey].roster.find(x=>x.id===el.dataset.id);
+      if(person){ person.manager = el.checked; queueSaveRoster(deptKey); }
+    });
+  });
+  tbody.querySelectorAll('.roster-del').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      if(!confirm('해당 인원을 명단에서 삭제하시겠습니까? (지금까지 입력된 업무내용/근태 기록은 보존됩니다)')) return;
+      state[deptKey].roster = state[deptKey].roster.filter(x=>x.id!==el.dataset.id);
+      queueSaveRoster(deptKey);
+      renderAll();
+    });
+  });
 }
 
-function escapeHtml(s){
-  return (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* ---------------- 탭/부서 전환 ---------------- */
+function switchTab(tab){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active', p.id==='panel-'+tab));
 }
-
-// Tabs
 document.querySelectorAll('.tab-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+  btn.addEventListener('click', ()=> switchTab(btn.dataset.tab));
+});
+
+document.querySelectorAll('.dept-btn').forEach(btn=>{
+  btn.addEventListener('click', async ()=>{
+    currentDept = btn.dataset.dept;
+    updateHeaderForDept();
+    renderAll();
+    setSaveState(currentDept==='combined' ? 'readonly' : 'saved');
+    await refreshWeekList();
   });
 });
 
-// Period nav
-document.getElementById('prevWeek').addEventListener('click', ()=>{
-  currentMonday = addDays(currentMonday, -7);
-  loadWeek(currentMonday);
-});
-document.getElementById('nextWeek').addEventListener('click', ()=>{
-  currentMonday = addDays(currentMonday, 7);
-  loadWeek(currentMonday);
-});
-document.getElementById('thisWeekBtn').addEventListener('click', ()=>{
-  currentMonday = getMonday(new Date());
-  loadWeek(currentMonday);
-});
-document.getElementById('weekSelect').addEventListener('change', (e)=>{
+document.getElementById('prevWeek').addEventListener('click', async ()=>{ currentMonday = addDays(currentMonday,-7); await loadAll(currentMonday); await refreshWeekList(); });
+document.getElementById('nextWeek').addEventListener('click', async ()=>{ currentMonday = addDays(currentMonday,7); await loadAll(currentMonday); await refreshWeekList(); });
+document.getElementById('thisWeekBtn').addEventListener('click', async ()=>{ currentMonday = getMonday(new Date()); await loadAll(currentMonday); await refreshWeekList(); });
+document.getElementById('weekSelect').addEventListener('change', async (e)=>{
   if(!e.target.value) return;
   const [y,m,d] = e.target.value.split('-').map(Number);
-  currentMonday = new Date(y, m-1, d);
-  loadWeek(currentMonday);
+  currentMonday = new Date(y,m-1,d);
+  await loadAll(currentMonday);
+  await refreshWeekList();
 });
 
-// Clear buttons
 document.querySelectorAll('[data-clear]').forEach(btn=>{
   btn.addEventListener('click', ()=>{
-    const scope = btn.dataset.clear;
+    if(currentDept==='combined') return;
+    const scope = btn.dataset.clear, deptKey = currentDept;
     if(!confirm('이번 주 데이터를 정말 초기화하시겠습니까?')) return;
-    ROSTER.forEach(p=>{
-      if(scope==='work'){ data.people[p.name].prev=''; data.people[p.name].cur=''; }
-      if(scope==='note'){ data.people[p.name].note=''; }
-      if(scope==='att'){ CATS.forEach(c=> data.people[p.name].att[c]=[false,false,false,false,false]); }
+    state[deptKey].roster.forEach(p=>{
+      const pd = state[deptKey].weekData.people[p.id];
+      if(scope==='work'){ pd.prev=''; pd.cur=''; }
+      if(scope==='note'){ pd.note=''; }
+      if(scope==='att'){ CATS.forEach(c=> pd.att[c]=[false,false,false,false,false]); }
     });
     renderAll();
-    queueSave();
+    queueSaveWeek(deptKey);
   });
 });
 
-// 저장된 주차 목록
+document.getElementById('addRosterRow').addEventListener('click', ()=>{
+  if(currentDept==='combined') return;
+  const deptKey = currentDept;
+  const id = genId();
+  state[deptKey].roster.push({id, rank:'', name:'', manager:false});
+  state[deptKey].weekData.people[id] = blankPersonData();
+  queueSaveRoster(deptKey);
+  renderAll();
+});
+
 async function refreshWeekList(){
   const sel = document.getElementById('weekSelect');
   const currentVal = sel.value;
   if(!supabaseClient) return;
   try{
-    const {data: rows, error} = await supabaseClient
-      .from('weekly_reports')
-      .select('week_key')
-      .order('week_key', {ascending:false});
+    const {data:rows, error} = await supabaseClient.from('weekly_reports').select('week_key').order('week_key',{ascending:false});
     if(error) throw error;
+    const uniq = [...new Set((rows||[]).map(r=>r.week_key))];
     sel.innerHTML = '<option value="">저장된 주차 조회</option>';
-    (rows||[]).forEach(r=>{
-      const dateStr = r.week_key;
+    uniq.forEach(dateStr=>{
       const [y,m,d] = dateStr.split('-').map(Number);
-      const mon = new Date(y,m-1,d);
-      const fri = addDays(mon,4);
+      const mon = new Date(y,m-1,d), fri = addDays(mon,4);
       const opt = document.createElement('option');
-      opt.value = dateStr;
-      opt.textContent = `${krDate(mon)} ~ ${krDate(fri)}`;
+      opt.value = dateStr; opt.textContent = `${krDate(mon)} ~ ${krDate(fri)}`;
       sel.appendChild(opt);
     });
     sel.value = currentVal;
   }catch(e){ console.error(e); }
 }
 
-// 엑셀 다운로드
+/* ---------------- 엑셀 다운로드 ---------------- */
 document.getElementById('exportBtn').addEventListener('click', ()=>{
-  try{
-    exportExcel();
-  }catch(e){
-    alert('엑셀 생성 중 오류가 발생했습니다: ' + e.message);
-  }
+  try{ currentDept==='combined' ? exportExcelCombined() : exportExcel(currentDept); }
+  catch(e){ alert('엑셀 생성 중 오류가 발생했습니다: ' + e.message); }
 });
 
-function exportExcel(){
+function buildDataAOA(deptKey){
+  const roster = state[deptKey].roster, pdata = state[deptKey].weekData.people;
   const friday = addDays(currentMonday,4);
   const periodStr = `${krDate(currentMonday)} ~ ${krDate(friday)}`;
-  const wb = XLSX.utils.book_new();
-
-  /* ---------- Sheet 1: 데이터 ---------- */
-  const dataAOA = [];
-  dataAOA.push([`부 서 명 : PM팀`]);
-  dataAOA.push([`일 자 : ${periodStr}`]);
-  dataAOA.push(['직급 성명','전주 중요 업무 내용','금주 중요 업무 내용','특이사항','구분','월','화','수','목','금']);
-  const dataMerges = [
-    {s:{r:0,c:0},e:{r:0,c:9}},
-    {s:{r:1,c:0},e:{r:1,c:9}},
-  ];
-
+  const aoa = [];
+  aoa.push([`부 서 명 : ${DEPT_LABELS[deptKey]}`]);
+  aoa.push([`일 자 : ${periodStr}`]);
+  aoa.push(['직급 성명','전주 중요 업무 내용','금주 중요 업무 내용','특이사항','구분','월','화','수','목','금']);
+  const merges = [{s:{r:0,c:0},e:{r:0,c:9}},{s:{r:1,c:0},e:{r:1,c:9}}];
   let r = 3;
-  ROSTER.forEach(p=>{
-    const pd = data.people[p.name];
-    const startRow = r;
-    CATS.forEach((cat, ci)=>{
+  roster.forEach(p=>{
+    const pd = pdata[p.id]; const startRow = r;
+    CATS.forEach((cat,ci)=>{
       const row = [];
       row[0] = ci===0 ? `${p.rank} ${p.name}` : '';
-      row[1] = ci===0 ? pd.prev : '';
-      row[2] = ci===0 ? pd.cur : '';
-      row[3] = ci===0 ? pd.note : '';
+      row[1] = ci===0 ? pd.prev : ''; row[2] = ci===0 ? pd.cur : ''; row[3] = ci===0 ? pd.note : '';
       row[4] = cat;
       DAYS.forEach((d,di)=>{ row[5+di] = pd.att[cat][di] ? 'V' : ''; });
-      dataAOA.push(row);
-      r++;
+      aoa.push(row); r++;
     });
-    dataMerges.push({s:{r:startRow,c:0},e:{r:startRow+2,c:0}});
-    dataMerges.push({s:{r:startRow,c:1},e:{r:startRow+2,c:1}});
-    dataMerges.push({s:{r:startRow,c:2},e:{r:startRow+2,c:2}});
-    dataMerges.push({s:{r:startRow,c:3},e:{r:startRow+2,c:3}});
+    merges.push({s:{r:startRow,c:0},e:{r:startRow+2,c:0}});
+    merges.push({s:{r:startRow,c:1},e:{r:startRow+2,c:1}});
+    merges.push({s:{r:startRow,c:2},e:{r:startRow+2,c:2}});
+    merges.push({s:{r:startRow,c:3},e:{r:startRow+2,c:3}});
   });
-
-  // 하단 요일별 합계 행 (카테고리별)
   CATS.forEach(cat=>{
     const row = ['','','',`${cat} 합계 (요일별 인원수)`,''];
-    DAYS.forEach((d,di)=>{ row[5+di] = dayCount(cat, di); });
-    dataAOA.push(row);
-    dataMerges.push({s:{r:r,c:0},e:{r:r,c:3}});
-    r++;
+    DAYS.forEach((d,di)=>{ row[5+di] = dayCount(deptKey,cat,di); });
+    aoa.push(row); merges.push({s:{r:r,c:0},e:{r:r,c:3}}); r++;
   });
+  return {aoa, merges};
+}
 
-  const wsData = XLSX.utils.aoa_to_sheet(dataAOA);
-  wsData['!merges'] = dataMerges;
+function exportExcel(deptKey){
+  const friday = addDays(currentMonday,4);
+  const wb = XLSX.utils.book_new();
+  const {aoa, merges} = buildDataAOA(deptKey);
+  const wsData = XLSX.utils.aoa_to_sheet(aoa);
+  wsData['!merges'] = merges;
   wsData['!cols'] = [{wch:14},{wch:34},{wch:34},{wch:26},{wch:10},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5}];
   XLSX.utils.book_append_sheet(wb, wsData, '데이터');
 
-  /* ---------- Sheet 2: 부서원 (관리자 제외) ---------- */
-  const staff = ROSTER.filter(p=>!p.manager);
-  const staffAOA = [];
-  staffAOA.push(['주 간 업 무 보 고 서 (부 서 원 용)']);
-  staffAOA.push([`부 서 명 : 업무 PM팀`]);
-  staffAOA.push([`일 자 : ${periodStr}`]);
-  staffAOA.push(['인원','전주 주요 업무 내용','금주 주요 업무 내용','특이사항']);
-  staff.forEach(p=>{
-    const pd = data.people[p.name];
-    staffAOA.push([`${p.rank} ${p.name}`, pd.prev, pd.cur, pd.note]);
-  });
+  const staff = state[deptKey].roster.filter(p=>!p.manager);
+  const pdata = state[deptKey].weekData.people;
+  const staffAOA = [['주 간 업 무 보 고 서 (부 서 원 용)'],[`부 서 명 : ${DEPT_LABELS[deptKey]}`],[`일 자 : ${krDate(currentMonday)} ~ ${krDate(friday)}`],['인원','전주 주요 업무 내용','금주 주요 업무 내용','특이사항']];
+  staff.forEach(p=>{ const pd=pdata[p.id]; staffAOA.push([`${p.rank} ${p.name}`, pd.prev, pd.cur, pd.note]); });
   const wsStaff = XLSX.utils.aoa_to_sheet(staffAOA);
-  wsStaff['!merges'] = [
-    {s:{r:0,c:0},e:{r:0,c:3}},
-    {s:{r:1,c:0},e:{r:1,c:3}},
-    {s:{r:2,c:0},e:{r:2,c:3}},
-  ];
+  wsStaff['!merges'] = [{s:{r:0,c:0},e:{r:0,c:3}},{s:{r:1,c:0},e:{r:1,c:3}},{s:{r:2,c:0},e:{r:2,c:3}}];
   wsStaff['!cols'] = [{wch:14},{wch:40},{wch:40},{wch:28}];
   XLSX.utils.book_append_sheet(wb, wsStaff, '부서원');
 
-  /* ---------- Sheet 3: 부서장 (관리자용, 근태현황 자동집계) ---------- */
-  const managers = ROSTER.filter(p=>p.manager);
-  const mgrAOA = [];
-  mgrAOA.push(['주 간 업 무 보 고 서 (부 서 장)']);
-  mgrAOA.push([]);
-  const mgrMerges = [{s:{r:0,c:0},e:{r:0,c:3}}];
-
-  function attendanceSummary(){
-    const lines = {연차:[], 외근:[]};
-    ROSTER.forEach(p=>{
-      const pd = data.people[p.name];
-      ['연차','외근'].forEach(cat=>{
-        const onDays = DAYS.filter((d,di)=>pd.att[cat][di]);
-        if(onDays.length){
-          lines[cat].push(`${p.rank} ${p.name} (${onDays.join(',')})`);
-        }
-      });
-    });
-    return lines;
-  }
-  const summary = attendanceSummary();
-  const dosirakLine = DAYS.map((d,di)=>`${d} ${dayCount('도시락',di)}명`).join(' / ');
-
-  managers.forEach(p=>{
-    const pd = data.people[p.name];
-    const rowStart = mgrAOA.length;
-    mgrAOA.push(['부 서 명','PM팀','작 성 일 자', periodStr]);
-    mgrAOA.push(['보고자 직책', p.rank, '보고자 성명', p.name]);
-    mgrAOA.push(['전주 주요 업무 내용','','금주 주요 업무 내용','']);
-    mgrAOA.push([pd.prev,'',pd.cur,'']);
-    mgrAOA.push(['특이사항','','',pd.note]);
-    mgrAOA.push(['부서원 근태현황','','','']);
-    mgrAOA.push(['연차','',summary.연차.join('\n') || '없음','']);
-    mgrAOA.push(['외근','',summary.외근.join('\n') || '없음','']);
-    mgrAOA.push(['도시락(요일별)','',dosirakLine,'']);
-    mgrAOA.push(['지 시 사 항','','','']);
-    mgrAOA.push(['','','','']);
-    mgrAOA.push([]);
-    mgrMerges.push({s:{r:rowStart+2,c:0},e:{r:rowStart+2,c:1}});
-    mgrMerges.push({s:{r:rowStart+2,c:2},e:{r:rowStart+2,c:3}});
-    mgrMerges.push({s:{r:rowStart+3,c:0},e:{r:rowStart+3,c:1}});
-    mgrMerges.push({s:{r:rowStart+3,c:2},e:{r:rowStart+3,c:3}});
-    mgrMerges.push({s:{r:rowStart+4,c:1},e:{r:rowStart+4,c:3}});
-    mgrMerges.push({s:{r:rowStart+5,c:0},e:{r:rowStart+5,c:3}});
-    mgrMerges.push({s:{r:rowStart+6,c:1},e:{r:rowStart+6,c:1}});
-    mgrMerges.push({s:{r:rowStart+6,c:2},e:{r:rowStart+6,c:3}});
-    mgrMerges.push({s:{r:rowStart+7,c:1},e:{r:rowStart+7,c:1}});
-    mgrMerges.push({s:{r:rowStart+7,c:2},e:{r:rowStart+7,c:3}});
-    mgrMerges.push({s:{r:rowStart+8,c:1},e:{r:rowStart+8,c:1}});
-    mgrMerges.push({s:{r:rowStart+8,c:2},e:{r:rowStart+8,c:3}});
-    mgrMerges.push({s:{r:rowStart+9,c:0},e:{r:rowStart+9,c:3}});
-    mgrMerges.push({s:{r:rowStart+10,c:0},e:{r:rowStart+10,c:3}});
-  });
-  const wsMgr = XLSX.utils.aoa_to_sheet(mgrAOA);
-  wsMgr['!merges'] = mgrMerges;
-  wsMgr['!cols'] = [{wch:16},{wch:22},{wch:16},{wch:34}];
-  XLSX.utils.book_append_sheet(wb, wsMgr, '부서장');
-
-  const filename = `주간업무보고서_${isoKey(currentMonday)}_${isoKey(friday)}.xlsx`;
+  const filename = `${DEPT_LABELS[deptKey]}_주간업무보고서_${isoKey(currentMonday)}_${isoKey(friday)}.xlsx`;
   XLSX.writeFile(wb, filename);
 }
 
-// PWA: Service worker 등록
-if('serviceWorker' in navigator){
-  window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('sw.js').catch(err=>console.warn('SW 등록 실패', err));
+function exportExcelCombined(){
+  const friday = addDays(currentMonday,4);
+  const wb = XLSX.utils.book_new();
+  DEPTS.forEach(dept=>{
+    const {aoa, merges} = buildDataAOA(dept);
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!merges'] = merges;
+    ws['!cols'] = [{wch:14},{wch:34},{wch:34},{wch:26},{wch:10},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5}];
+    XLSX.utils.book_append_sheet(wb, ws, DEPT_LABELS[dept]);
   });
+  const sumAOA = [['PM실 통합 요일별 합계'],[`일 자 : ${krDate(currentMonday)} ~ ${krDate(friday)}`],['구분','월','화','수','목','금']];
+  CATS.forEach(cat=>{
+    const row = [cat];
+    DAYS.forEach((d,di)=> row.push(combinedDayCount(cat,di)));
+    sumAOA.push(row);
+  });
+  const wsSum = XLSX.utils.aoa_to_sheet(sumAOA);
+  wsSum['!merges'] = [{s:{r:0,c:0},e:{r:0,c:5}},{s:{r:1,c:0},e:{r:1,c:5}}];
+  wsSum['!cols'] = [{wch:14},{wch:6},{wch:6},{wch:6},{wch:6},{wch:6}];
+  XLSX.utils.book_append_sheet(wb, wsSum, 'PM실 통합요약');
+
+  XLSX.writeFile(wb, `PM실_통합_주간업무보고서_${isoKey(currentMonday)}_${isoKey(friday)}.xlsx`);
+}
+
+// PWA
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(err=>console.warn('SW 등록 실패', err)); });
 }
 
 // init
 (async function init(){
-  await loadWeek(currentMonday);
+  updateHeaderForDept();
+  await loadAll(currentMonday);
   await refreshWeekList();
 })();
 </script>
