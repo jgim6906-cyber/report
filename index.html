@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -158,7 +158,7 @@
         <span class="period-label" id="periodLabel">-</span>
         <button id="nextWeek" title="다음 주">›</button>
       </div>
-      <button class="today-btn" id="thisWeekBtn">이번 주</button>
+      <button class="today-btn" id="thisWeekBtn" title="실제 달력상 다음 주(=이번 주에 작성하는 대상 주)로 이동">작성 대상 주</button>
       <select class="week-select" id="weekSelect"><option value="">저장된 주차 조회</option></select>
       <div class="save-state"><span class="dot" id="saveDot"></span><span id="saveText">연결 중...</span></div>
     </div>
@@ -203,7 +203,7 @@
       <div class="panel-head">
         <div>
           <div class="panel-title">전주 · 금주 중요 업무 내용</div>
-          <div class="panel-desc">인원별로 지난주 처리한 업무와 이번주 진행할 업무를 작성하세요.</div>
+          <div class="panel-desc">인원별로 지난주 처리한 업무와 이번주 진행할 업무를 작성하세요. "금주 중요 업무 내용"은 다음 주로 넘어가면 "전주 중요 업무 내용"으로 자동 연계됩니다.</div>
         </div>
         <button class="clear-btn" data-clear="work">이번 주 업무내용 초기화</button>
       </div>
@@ -312,7 +312,10 @@ function genId(){return 'p_'+Math.random().toString(36).slice(2,9)+Date.now().to
 function escapeHtml(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function blankPersonData(){return {prev:'',cur:'',note:'',att:{연차:[false,false,false,false,false],외근:[false,false,false,false,false],도시락:[false,false,false,false,false]}};}
 
-let currentMonday = getMonday(new Date());
+/* 업무 특성상 "이번 주"에는 다음 주 계획을 미리 작성하므로,
+   기본으로 보여주는 기준 주는 실제 달력상 다음 주로 설정합니다. */
+function getPlanningMonday(){ return addDays(getMonday(new Date()), 7); }
+let currentMonday = getPlanningMonday();
 let currentDept = 'biz';
 let state = {
   biz: {roster:[], weekData:{people:{}}},
@@ -358,11 +361,42 @@ async function loadWeekData(deptKey, monday){
   }catch(e){ console.error(e); state[deptKey].weekData = {people:{}}; }
 }
 
+/* 지난주 데이터만 별도로 가볍게 조회 (자동 연계용) */
+async function fetchWeekDataRaw(deptKey, monday){
+  if(!supabaseClient) return null;
+  const key = isoKey(monday);
+  try{
+    const {data:row, error} = await supabaseClient.from('weekly_reports').select('data').eq('dept_key', deptKey).eq('week_key', key).maybeSingle();
+    if(error) throw error;
+    return row ? row.data : null;
+  }catch(e){ console.error(e); return null; }
+}
+
+/* 전주(직전 주)의 "금주 업무 내용"을 이번 주 "전주 업무 내용"이 비어있을 때만 자동으로 채움 */
+async function applyCarryOver(deptKey, monday){
+  const prevData = await fetchWeekDataRaw(deptKey, addDays(monday, -7));
+  if(!prevData || !prevData.people) return false;
+  let changed = false;
+  state[deptKey].roster.forEach(p=>{
+    const cur = state[deptKey].weekData.people[p.id];
+    const prevPerson = prevData.people[p.id];
+    if(cur && prevPerson && (!cur.prev || !cur.prev.trim()) && prevPerson.cur && prevPerson.cur.trim()){
+      cur.prev = prevPerson.cur;
+      changed = true;
+    }
+  });
+  return changed;
+}
+
 async function loadAll(monday){
   if(!supabaseClient){ setSaveState('noconn'); DEPTS.forEach(d=>{state[d].roster=[];state[d].weekData={people:{}};}); renderPeriod(); renderAll(); return; }
   await Promise.all(DEPTS.map(d=>loadRoster(d)));
   await Promise.all(DEPTS.map(d=>loadWeekData(d, monday)));
   DEPTS.forEach(d=>ensurePeopleData(d));
+  for(const d of DEPTS){
+    const changed = await applyCarryOver(d, monday);
+    if(changed) queueSaveWeek(d);
+  }
   renderPeriod();
   renderAll();
   setSaveState(currentDept==='combined' ? 'readonly' : 'saved');
@@ -635,7 +669,7 @@ document.querySelectorAll('.dept-btn').forEach(btn=>{
 
 document.getElementById('prevWeek').addEventListener('click', async ()=>{ currentMonday = addDays(currentMonday,-7); await loadAll(currentMonday); await refreshWeekList(); });
 document.getElementById('nextWeek').addEventListener('click', async ()=>{ currentMonday = addDays(currentMonday,7); await loadAll(currentMonday); await refreshWeekList(); });
-document.getElementById('thisWeekBtn').addEventListener('click', async ()=>{ currentMonday = getMonday(new Date()); await loadAll(currentMonday); await refreshWeekList(); });
+document.getElementById('thisWeekBtn').addEventListener('click', async ()=>{ currentMonday = getPlanningMonday(); await loadAll(currentMonday); await refreshWeekList(); });
 document.getElementById('weekSelect').addEventListener('change', async (e)=>{
   if(!e.target.value) return;
   const [y,m,d] = e.target.value.split('-').map(Number);
