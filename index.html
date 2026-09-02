@@ -150,12 +150,12 @@
   .doc-page table{border-collapse:collapse;width:100%;table-layout:fixed;}
   .doc-page td,.doc-page th{border:1.3px solid #333;padding:6px 9px;vertical-align:middle;word-break:break-all;}
   .doc-title-row td{border:2px solid #333;height:80px;padding:0;}
-  .doc-title-cell{width:56%;text-align:center;font-size:21px;font-weight:900;letter-spacing:3px;line-height:1.4;vertical-align:middle;}
+  .doc-title-cell{width:54%;text-align:center;font-size:21px;font-weight:900;letter-spacing:3px;line-height:1.4;vertical-align:middle;}
   .doc-title-cell small{display:block;font-size:12px;font-weight:500;letter-spacing:1.5px;margin-top:3px;color:#333;}
-  .doc-sign-outer{width:44%;padding:0 !important;vertical-align:top;}
-  .doc-sign-table{width:100%;height:80px;}
-  .doc-sign-table td{border:1px solid #333;text-align:center;font-size:13px;font-weight:700;padding:0;}
-  .doc-sign-label{width:34px;font-size:13px;font-weight:700;writing-mode:vertical-rl;letter-spacing:3px;}
+  .doc-sign-outer{width:46%;padding:0 !important;vertical-align:top;}
+  .doc-sign-table{width:100%;height:80px;table-layout:fixed;}
+  .doc-sign-table td{border:1px solid #333;text-align:center;font-size:11.5px;font-weight:700;padding:0 1px;white-space:nowrap;}
+  .doc-sign-label{width:9mm;font-size:11.5px;font-weight:700;writing-mode:vertical-rl;letter-spacing:2px;white-space:normal;}
   .doc-sign-table .doc-head-row td{height:24px;}
   .doc-sign-table .doc-sign-box{height:56px;}
   .doc-meta-label{background:#f0f0f0;font-weight:700;font-size:13px;text-align:center;width:13%;}
@@ -184,7 +184,7 @@
     body *{visibility:hidden;}
     #printArea, #printArea *{visibility:visible;}
     #printArea{display:block !important;position:absolute;left:0;top:0;width:100%;padding:0;}
-    .doc-page{box-shadow:none;margin:0;width:auto !important;min-height:auto;padding:4mm 8mm !important;page-break-after:always;}
+    .doc-page{box-shadow:none;margin:0;width:auto !important;min-height:auto;padding:4mm 3mm !important;page-break-after:always;}
     @page{ size:A4; margin:8mm; }
   }
 
@@ -233,7 +233,7 @@
     </div>
 
     <div class="conn-banner" id="connBanner">
-      ⚠ 서버(Supabase)에 연결할 수 없습니다. index.html 상단의 SUPABASE_URL / SUPABASE_ANON_KEY 설정을 확인해주세요. 현재 입력 내용은 저장되지 않습니다.
+      ⚠ 서버(Supabase)와 통신이 원활하지 않습니다. index.html 상단의 SUPABASE_URL / SUPABASE_ANON_KEY 설정, Supabase 프로젝트가 일시중지(Paused) 상태는 아닌지, 네트워크 연결을 확인해주세요. 이 상태에서는 안전을 위해 저장이 자동으로 차단됩니다 — 새로고침 후 정상 연결되면 다시 저장됩니다.
     </div>
     <div class="combined-banner" id="combinedBanner">
       ℹ PM실(통합) 화면은 업무PM팀 · 공사PM팀 데이터를 함께 보는 조회 전용 화면입니다. 수정은 각 부서 탭에서 해주세요.
@@ -438,6 +438,18 @@ let state = {
 let saveWeekTimers = {biz:null, construction:null};
 let saveRosterTimers = {biz:null, construction:null};
 let rtChannel = null;
+/* 이번 세션에서 서버로부터 정상적으로 데이터를 한 번이라도 불러왔는지 여부.
+   로드에 실패한 상태(빈 값)로 저장이 나가면 서버의 실제 데이터를 빈 값으로 덮어써버릴 수 있으므로,
+   로드가 성공하기 전까지는 저장을 막는 안전장치로 사용합니다. */
+let loadedOk = {biz:false, construction:false};
+
+/* Supabase 요청이 응답 없이 무한정 멈춰있지 않도록 제한 시간을 둠 (기본 10초) */
+function withTimeout(promise, ms=10000){
+  return Promise.race([
+    promise,
+    new Promise((_,reject)=>setTimeout(()=>reject(new Error('요청 시간이 초과되었습니다 (10초)')), ms))
+  ]);
+}
 
 function ensurePeopleData(deptKey){
   const s = state[deptKey];
@@ -452,6 +464,7 @@ function setSaveState(kind){
   if(kind==='saving'){dot.className='dot busy';text.textContent='저장 중...';banner.classList.remove('show');}
   else if(kind==='saved'){dot.className='dot';text.textContent='저장됨';banner.classList.remove('show');}
   else if(kind==='error'){dot.className='dot error';text.textContent='저장 실패';banner.classList.add('show');}
+  else if(kind==='loaderror'){dot.className='dot error';text.textContent='불러오기 실패 (새로고침 필요)';banner.classList.add('show');}
   else if(kind==='noconn'){dot.className='dot error';text.textContent='서버 연결 안 됨';banner.classList.add('show');}
   else if(kind==='readonly'){dot.className='dot';text.textContent='조회 전용';}
 }
@@ -460,20 +473,21 @@ function setSaveState(kind){
 async function loadRoster(deptKey){
   if(!supabaseClient){ state[deptKey].roster = []; return; }
   try{
-    const {data:row, error} = await supabaseClient.from('rosters').select('people').eq('dept_key', deptKey).maybeSingle();
+    const {data:row, error} = await withTimeout(supabaseClient.from('rosters').select('people').eq('dept_key', deptKey).maybeSingle());
     if(error) throw error;
     state[deptKey].roster = (row && row.people) ? row.people : [];
-  }catch(e){ console.error(e); state[deptKey].roster = []; }
+    loadedOk[deptKey] = true;
+  }catch(e){ console.error(e); loadedOk[deptKey] = false; }
 }
 
 async function loadWeekData(deptKey, monday){
   const key = isoKey(monday);
   if(!supabaseClient){ state[deptKey].weekData = {people:{}}; return; }
   try{
-    const {data:row, error} = await supabaseClient.from('weekly_reports').select('data').eq('dept_key', deptKey).eq('week_key', key).maybeSingle();
+    const {data:row, error} = await withTimeout(supabaseClient.from('weekly_reports').select('data').eq('dept_key', deptKey).eq('week_key', key).maybeSingle());
     if(error) throw error;
     state[deptKey].weekData = (row && row.data) ? row.data : {people:{}};
-  }catch(e){ console.error(e); state[deptKey].weekData = {people:{}}; }
+  }catch(e){ console.error(e); loadedOk[deptKey] = false; }
 }
 
 /* 지난주 데이터만 별도로 가볍게 조회 (자동 연계용) */
@@ -481,7 +495,7 @@ async function fetchWeekDataRaw(deptKey, monday){
   if(!supabaseClient) return null;
   const key = isoKey(monday);
   try{
-    const {data:row, error} = await supabaseClient.from('weekly_reports').select('data').eq('dept_key', deptKey).eq('week_key', key).maybeSingle();
+    const {data:row, error} = await withTimeout(supabaseClient.from('weekly_reports').select('data').eq('dept_key', deptKey).eq('week_key', key).maybeSingle());
     if(error) throw error;
     return row ? row.data : null;
   }catch(e){ console.error(e); return null; }
@@ -505,26 +519,33 @@ async function applyCarryOver(deptKey, monday){
 
 async function loadAll(monday){
   if(!supabaseClient){ setSaveState('noconn'); DEPTS.forEach(d=>{state[d].roster=[];state[d].weekData={people:{}};}); renderPeriod(); renderAll(); return; }
+  DEPTS.forEach(d=>loadedOk[d]=false);
   await Promise.all(DEPTS.map(d=>loadRoster(d)));
   await Promise.all(DEPTS.map(d=>loadWeekData(d, monday)));
   DEPTS.forEach(d=>ensurePeopleData(d));
   for(const d of DEPTS){
+    if(!loadedOk[d]) continue; // 로드 실패한 부서는 연계 시도하지 않음
     const changed = await applyCarryOver(d, monday);
     if(changed) queueSaveWeek(d);
   }
   renderPeriod();
   renderAll();
-  setSaveState(currentDept==='combined' ? 'readonly' : 'saved');
+  if(DEPTS.every(d=>loadedOk[d])){
+    setSaveState(currentDept==='combined' ? 'readonly' : 'saved');
+  }else{
+    setSaveState('loaderror'); // 일부/전체 로드 실패 — 이 상태에서는 저장이 자동 차단됩니다
+  }
   subscribeRealtime();
 }
 
 async function saveWeekData(deptKey){
   if(!supabaseClient){ setSaveState('noconn'); return; }
+  if(!loadedOk[deptKey]){ console.warn(deptKey+' 로드가 안 된 상태라 저장을 건너뜁니다.'); setSaveState('error'); return; }
   setSaveState('saving');
   const key = isoKey(currentMonday);
   try{
-    const {error} = await supabaseClient.from('weekly_reports')
-      .upsert({dept_key:deptKey, week_key:key, data:state[deptKey].weekData, updated_at:new Date().toISOString()}, {onConflict:'dept_key,week_key'});
+    const {error} = await withTimeout(supabaseClient.from('weekly_reports')
+      .upsert({dept_key:deptKey, week_key:key, data:state[deptKey].weekData, updated_at:new Date().toISOString()}, {onConflict:'dept_key,week_key'}));
     if(error) throw error;
     setSaveState('saved');
     refreshWeekList();
@@ -534,10 +555,11 @@ function queueSaveWeek(deptKey){ clearTimeout(saveWeekTimers[deptKey]); saveWeek
 
 async function saveRoster(deptKey){
   if(!supabaseClient){ setSaveState('noconn'); return; }
+  if(!loadedOk[deptKey]){ console.warn(deptKey+' 로드가 안 된 상태라 저장을 건너뜁니다.'); setSaveState('error'); return; }
   setSaveState('saving');
   try{
-    const {error} = await supabaseClient.from('rosters')
-      .upsert({dept_key:deptKey, people:state[deptKey].roster, updated_at:new Date().toISOString()}, {onConflict:'dept_key'});
+    const {error} = await withTimeout(supabaseClient.from('rosters')
+      .upsert({dept_key:deptKey, people:state[deptKey].roster, updated_at:new Date().toISOString()}, {onConflict:'dept_key'}));
     if(error) throw error;
     setSaveState('saved');
   }catch(e){ console.error(e); setSaveState('error'); }
@@ -1127,10 +1149,6 @@ function buildReportDocs(deptKey){
 }
 
 /* ---------------- 엑셀 다운로드 ---------------- */
-document.getElementById('exportBtn').addEventListener('click', ()=>{
-  try{ currentDept==='combined' ? exportExcelCombined() : exportExcel(currentDept); }
-  catch(e){ alert('엑셀 생성 중 오류가 발생했습니다: ' + e.message); }
-});
 
 function buildDataAOA(deptKey){
   const roster = state[deptKey].roster, pdata = state[deptKey].weekData.people;
@@ -1226,7 +1244,7 @@ if('serviceWorker' in navigator){
     loadReportExtraInputs();
   }catch(e){
     console.error('초기화 중 오류:', e);
-    setSaveState('error');
+    setSaveState('loaderror');
   }
 })();
 </script>
