@@ -146,7 +146,7 @@
   .report-preview-wrap{background:#8a8a8a;border-radius:10px;padding:22px;overflow-x:auto;}
 
   /* 보고서 문서 스타일 (미리보기 + 인쇄 공용) */
-  .doc-page{width:210mm;min-height:150mm;margin:0 auto 22px;background:#fff;padding:10mm 11mm;box-shadow:0 6px 20px rgba(0,0,0,0.3);color:#111;box-sizing:border-box;}
+  .doc-page{width:210mm;min-height:150mm;margin:0 auto 22px;background:#fff;padding:10mm 11mm;box-shadow:0 6px 20px rgba(0,0,0,0.3);color:#111;box-sizing:border-box;border-left:2px solid #333;border-right:2px solid #333;}
   .doc-page table{border-collapse:collapse;width:100%;table-layout:fixed;}
   .doc-page td,.doc-page th{border:1.3px solid #333;padding:6px 9px;vertical-align:middle;word-break:break-all;}
   .doc-title-row td{border:2px solid #333;height:80px;padding:0;}
@@ -183,7 +183,7 @@
     #printArea, #printArea *{visibility:visible;}
     #printArea{display:block !important;position:absolute;left:0;top:0;width:100%;padding:0;}
     .doc-page{box-shadow:none;margin:0;width:auto !important;min-height:auto;padding:4mm 3mm !important;page-break-after:always;}
-    @page{ size:A4; margin:8mm; }
+    @page{ size:A4; margin:14mm 8mm 8mm 8mm; }
   }
 
   .roster-input{width:100%;border:1px solid transparent;background:transparent;padding:10px 12px;font-family:inherit;font-size:13px;outline:none;border-radius:6px;}
@@ -454,6 +454,47 @@ let lastLocalSaveAt = {biz:0, construction:0};
    로드가 성공하기 전까지는 저장을 막는 안전장치로 사용합니다. */
 let loadedOk = {biz:false, construction:false};
 
+/* ============================================================
+   동시 편집 충돌 방지 (여러 명이 동시에 다른 사람 칸을 수정할 때
+   나중 저장이 앞선 저장을 통째로 덮어써 데이터가 사라지는 문제 방지)
+
+   기존 방식: 저장할 때 내 메모리에 있는 weekData 전체를 그대로 업로드.
+   → 내가 로드한 이후 다른 사람이 다른 항목을 저장했다면, 그 사이
+     내 화면에 반영이 안 됐을 수 있고, 그 상태로 내가 "전체"를 저장하면
+     방금 다른 사람이 저장한 내용이 통째로 사라짐.
+
+   개선 방식: 각 인원(person)/근태보완(extra) 단위로 "내가 지금 수정
+   중(dirty)"인지 추적. 저장할 때는 서버의 최신 스냅샷(serverWeekData)을
+   기준으로 삼고, 그 위에 "내가 수정중인 항목"만 내 값으로 덮어써서
+   병합한 뒤 저장합니다. 이러면 내가 모르는 사이 다른 사람이 저장한
+   다른 인원의 내용은 그대로 보존됩니다. */
+let serverWeekData = {biz:null, construction:null};   // 서버로부터 마지막으로 확인된 최신 데이터
+let dirtyPeople = {biz:new Set(), construction:new Set()}; // 로컬에서 아직 저장 확정 안 된(수정중) 인원 id 목록
+let dirtyVersion = {biz:{}, construction:{}};          // 인원별 수정 회차(저장 도중 또 수정됐는지 판별용)
+let dirtyExtra = {biz:false, construction:false};      // 근태 보완입력(extra) 수정중 여부
+let dirtyExtraVersion = {biz:0, construction:0};
+
+function markPersonDirty(deptKey, personId){
+  dirtyPeople[deptKey].add(personId);
+  dirtyVersion[deptKey][personId] = (dirtyVersion[deptKey][personId]||0) + 1;
+}
+function markExtraDirty(deptKey){
+  dirtyExtra[deptKey] = true;
+  dirtyExtraVersion[deptKey]++;
+}
+/* 서버에서 받은 최신 데이터(serverData)를 기준으로 삼되, 내가 지금 수정중인
+   인원/근태보완 항목만 로컬 값으로 덮어써서 화면에 쓸 최종 weekData를 만듭니다. */
+function mergeServerWithLocalDirty(deptKey, serverData){
+  const merged = JSON.parse(JSON.stringify(serverData && serverData.people ? serverData : {people:{}}));
+  if(!merged.people) merged.people = {};
+  const localPeople = (state[deptKey].weekData && state[deptKey].weekData.people) || {};
+  dirtyPeople[deptKey].forEach(pid=>{ if(localPeople[pid]) merged.people[pid] = localPeople[pid]; });
+  if(dirtyExtra[deptKey] && state[deptKey].weekData && state[deptKey].weekData.extra){
+    merged.extra = state[deptKey].weekData.extra;
+  }
+  return merged;
+}
+
 /* Supabase 요청이 응답 없이 무한정 멈춰있지 않도록 제한 시간을 둠 (기본 10초) */
 function withTimeout(promise, ms=10000){
   return Promise.race([
@@ -498,12 +539,17 @@ async function loadWeekData(deptKey, monday){
       전주 "금주 업무 내용"이 이번 주 칸에 있는 것처럼 보였습니다) */
   state[deptKey].weekData = {people:{}};
   weekKeyOf[deptKey] = key;
+  serverWeekData[deptKey] = null;
+  dirtyPeople[deptKey] = new Set();
+  dirtyExtra[deptKey] = false;
   if(!supabaseClient) return;
   try{
     const {data:row, error} = await withTimeout(supabaseClient.from('weekly_reports').select('data').eq('dept_key', deptKey).eq('week_key', key).maybeSingle());
     if(error) throw error;
     if(weekKeyOf[deptKey] !== key) return; // 그 사이 다른 주차로 이동했으면 결과 버림
-    state[deptKey].weekData = (row && row.data) ? row.data : {people:{}};
+    const data = (row && row.data) ? row.data : {people:{}};
+    state[deptKey].weekData = data;
+    serverWeekData[deptKey] = JSON.parse(JSON.stringify(data));
   }catch(e){ console.error(e); loadedOk[deptKey] = false; }
 }
 
@@ -534,6 +580,7 @@ async function applyCarryOver(deptKey, monday){
        이번 주 "금주 업무 내용"(cur)은 어떤 경우에도 건드리지 않습니다. */
     if((!thisWeek.prev || !thisWeek.prev.trim()) && prevPerson.cur && prevPerson.cur.trim()){
       thisWeek.prev = prevPerson.cur;
+      markPersonDirty(deptKey, p.id);
       changed = true;
     }
   });
@@ -573,12 +620,30 @@ async function saveWeekData(deptKey, expectedKey){
   const key = weekKeyOf[deptKey];
   if(!key){ console.warn(deptKey+' 주차 정보가 없어 저장을 건너뜁니다.'); return; }
   if(expectedKey && expectedKey !== key){ console.warn('주차가 바뀌어 저장을 취소합니다.'); return; }
+
+  /* 지금 이 순간 "내가 수정중"으로 표시된 항목들만 이번 저장에 포함시킵니다.
+     저장이 서버에 도달하는 동안 또 다른 수정이 생기면 그건 다음 저장 라운드에서 처리됩니다. */
+  const dirtySnapshot = new Set(dirtyPeople[deptKey]);
+  const versionSnapshot = {};
+  dirtySnapshot.forEach(pid=>{ versionSnapshot[pid] = dirtyVersion[deptKey][pid]; });
+  const extraDirtySnapshot = dirtyExtra[deptKey];
+  const extraVersionSnapshot = dirtyExtraVersion[deptKey];
+
+  /* 서버의 최신 스냅샷 위에 내가 수정중인 항목만 덮어써서 병합 (다른 사람의 변경사항은 보존) */
+  const merged = mergeServerWithLocalDirty(deptKey, serverWeekData[deptKey]);
+
   lastLocalSaveAt[deptKey] = Date.now();
   setSaveState('saving');
   try{
     const {error} = await withTimeout(supabaseClient.from('weekly_reports')
-      .upsert({dept_key:deptKey, week_key:key, data:state[deptKey].weekData, updated_at:new Date().toISOString()}, {onConflict:'dept_key,week_key'}));
+      .upsert({dept_key:deptKey, week_key:key, data:merged, updated_at:new Date().toISOString()}, {onConflict:'dept_key,week_key'}));
     if(error) throw error;
+    serverWeekData[deptKey] = JSON.parse(JSON.stringify(merged));
+    /* 저장 확정된 항목의 dirty 표시를 지웁니다. 단, 저장이 진행되는 사이 그 항목이
+       또 수정됐다면(버전이 바뀌었다면) 아직 저장 안 된 변경이 남아있는 것이므로
+       dirty 상태를 유지해서 다음 저장 라운드에 포함되도록 합니다. */
+    dirtySnapshot.forEach(pid=>{ if(dirtyVersion[deptKey][pid] === versionSnapshot[pid]) dirtyPeople[deptKey].delete(pid); });
+    if(extraDirtySnapshot && dirtyExtraVersion[deptKey] === extraVersionSnapshot) dirtyExtra[deptKey] = false;
     setSaveState('saved');
     refreshWeekList();
   }catch(e){ console.error(e); setSaveState('error'); }
@@ -613,12 +678,18 @@ function subscribeRealtime(){
       const row = payload.new;
       if(!row || row.week_key !== key) return;
       if(!DEPTS.includes(row.dept_key)) return;
-      /* 내가 방금(2.5초 이내) 저장을 보낸 부서라면, 이건 그 저장이 메아리처럼 되돌아온 것뿐입니다.
-         내 로컬 상태가 이미 최신본이므로 덮어쓰거나 다시 그릴 필요가 없습니다. */
-      if(Date.now() - lastLocalSaveAt[row.dept_key] < 2500) return;
-      state[row.dept_key].weekData = row.data || {people:{}};
+      /* 서버 최신본은 항상 최신 상태로 갱신(내가 지금 수정중인 항목이 있어도
+         "서버가 알고있는 최신값" 자체는 계속 추적해야 다음 저장 때 병합 기준으로 쓸 수 있습니다). */
+      serverWeekData[row.dept_key] = row.data || {people:{}};
+      /* 화면/메모리에 반영할 때는 서버 최신값 위에 "내가 지금 수정중인" 항목만
+         내 로컬 값으로 덮어써서 병합합니다. 이러면 남이 저장한 다른 사람의
+         내용은 즉시 반영되고, 내가 타이핑 중인 내용은 사라지지 않습니다. */
+      state[row.dept_key].weekData = mergeServerWithLocalDirty(row.dept_key, row.data);
       weekKeyOf[row.dept_key] = row.week_key;
       ensurePeopleData(row.dept_key);
+      /* 내가 방금(2.5초 이내) 저장을 보낸 부서라면, 이건 그 저장이 메아리처럼
+         되돌아온 것뿐이라 다시 그릴 필요는 없습니다 (이미 최신 화면임). */
+      if(Date.now() - lastLocalSaveAt[row.dept_key] < 2500) return;
       applyRenderSafely();
     })
     .on('postgres_changes', {event:'*', schema:'public', table:'rosters'}, (payload)=>{
@@ -703,7 +774,7 @@ function renderWork(deptKey){
     tbody.appendChild(tr);
   });
   tbody.querySelectorAll('textarea').forEach(el=>{
-    el.addEventListener('input', ()=>{ state[deptKey].weekData.people[el.dataset.id][el.dataset.field]=el.value; queueSaveWeek(deptKey); });
+    el.addEventListener('input', ()=>{ state[deptKey].weekData.people[el.dataset.id][el.dataset.field]=el.value; markPersonDirty(deptKey, el.dataset.id); queueSaveWeek(deptKey); });
   });
 }
 
@@ -718,7 +789,7 @@ function renderNote(deptKey){
     tbody.appendChild(tr);
   });
   tbody.querySelectorAll('textarea').forEach(el=>{
-    el.addEventListener('input', ()=>{ state[deptKey].weekData.people[el.dataset.id][el.dataset.field]=el.value; queueSaveWeek(deptKey); });
+    el.addEventListener('input', ()=>{ state[deptKey].weekData.people[el.dataset.id][el.dataset.field]=el.value; markPersonDirty(deptKey, el.dataset.id); queueSaveWeek(deptKey); });
   });
 }
 
@@ -742,6 +813,7 @@ function renderAtt(deptKey){
   tbody.querySelectorAll('input[type=checkbox]').forEach(el=>{
     el.addEventListener('change', ()=>{
       state[deptKey].weekData.people[el.dataset.id].att[el.dataset.cat][+el.dataset.day] = el.checked;
+      markPersonDirty(deptKey, el.dataset.id);
       renderSummary(deptKey);
       queueSaveWeek(deptKey);
     });
@@ -985,6 +1057,7 @@ function attachReportExtraListeners(){
       if(deptKey==='combined') return; // 통합 화면은 조회 전용이라 별도 저장 안 함
       if(!state[deptKey].weekData.extra) state[deptKey].weekData.extra = {absent:'',late:'',halfDay:'',misc:''};
       state[deptKey].weekData.extra[field] = e.target.value;
+      markExtraDirty(deptKey);
       queueSaveWeek(deptKey);
     });
   });
