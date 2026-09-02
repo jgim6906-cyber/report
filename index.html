@@ -444,6 +444,11 @@ let weekKeyOf = {biz:null, construction:null};
 let pendingWeekKey = {biz:null, construction:null};
 /* 주차 이동 중 이전 주차의 비동기 로드가 뒤늦게 끝나서 새 주차 데이터를 덮어쓰는 것을 막는 순번표 */
 let loadEpoch = 0;
+/* 방금 내가 직접 저장을 보낸 시각(부서별). realtime으로 "내가 방금 저장한 내용"이
+   메아리처럼 되돌아왔을 때 이를 구분해서 화면을 다시 그리지 않기 위해 사용합니다.
+   (타이핑 중 자동저장 → realtime 알림 → 전체 재렌더링 → 입력 중이던 textarea가
+    새로 만들어지며 커서/포커스가 날아가는 문제를 막기 위함) */
+let lastLocalSaveAt = {biz:0, construction:0};
 /* 이번 세션에서 서버로부터 정상적으로 데이터를 한 번이라도 불러왔는지 여부.
    로드에 실패한 상태(빈 값)로 저장이 나가면 서버의 실제 데이터를 빈 값으로 덮어써버릴 수 있으므로,
    로드가 성공하기 전까지는 저장을 막는 안전장치로 사용합니다. */
@@ -568,6 +573,7 @@ async function saveWeekData(deptKey, expectedKey){
   const key = weekKeyOf[deptKey];
   if(!key){ console.warn(deptKey+' 주차 정보가 없어 저장을 건너뜁니다.'); return; }
   if(expectedKey && expectedKey !== key){ console.warn('주차가 바뀌어 저장을 취소합니다.'); return; }
+  lastLocalSaveAt[deptKey] = Date.now();
   setSaveState('saving');
   try{
     const {error} = await withTimeout(supabaseClient.from('weekly_reports')
@@ -587,6 +593,7 @@ function queueSaveWeek(deptKey, expectedKey){
 async function saveRoster(deptKey){
   if(!supabaseClient){ setSaveState('noconn'); return; }
   if(!loadedOk[deptKey]){ console.warn(deptKey+' 로드가 안 된 상태라 저장을 건너뜁니다.'); setSaveState('error'); return; }
+  lastLocalSaveAt[deptKey] = Date.now();
   setSaveState('saving');
   try{
     const {error} = await withTimeout(supabaseClient.from('rosters')
@@ -606,19 +613,44 @@ function subscribeRealtime(){
       const row = payload.new;
       if(!row || row.week_key !== key) return;
       if(!DEPTS.includes(row.dept_key)) return;
+      /* 내가 방금(2.5초 이내) 저장을 보낸 부서라면, 이건 그 저장이 메아리처럼 되돌아온 것뿐입니다.
+         내 로컬 상태가 이미 최신본이므로 덮어쓰거나 다시 그릴 필요가 없습니다. */
+      if(Date.now() - lastLocalSaveAt[row.dept_key] < 2500) return;
       state[row.dept_key].weekData = row.data || {people:{}};
       weekKeyOf[row.dept_key] = row.week_key;
       ensurePeopleData(row.dept_key);
-      renderAll();
+      applyRenderSafely();
     })
     .on('postgres_changes', {event:'*', schema:'public', table:'rosters'}, (payload)=>{
       const row = payload.new;
       if(!row || !DEPTS.includes(row.dept_key)) return;
+      if(Date.now() - lastLocalSaveAt[row.dept_key] < 2500) return;
       state[row.dept_key].roster = row.people || [];
       ensurePeopleData(row.dept_key);
-      renderAll();
+      applyRenderSafely();
     })
     .subscribe();
+}
+
+/* 다른 사람이 편집한 내용이 실시간으로 들어왔을 때, 지금 내가 어딘가에
+   타이핑 중이라면(입력창에 포커스가 있는 상태) 화면을 다시 그리지 않고
+   잠시 미뤄둡니다. 그 입력창에서 손을 떼는(blur) 순간, 또는 3초 후
+   자동으로 최신 내용을 반영합니다. 이렇게 하면 다른 사람 편집 때문에
+   내가 타이핑하던 중간에 화면이 리셋되는 일이 없습니다. */
+let deferredRenderPending = false;
+function applyRenderSafely(){
+  const el = document.activeElement;
+  const isTyping = el && (el.tagName==='TEXTAREA' || el.tagName==='INPUT');
+  if(!isTyping){ renderAll(); return; }
+  if(deferredRenderPending) return;
+  deferredRenderPending = true;
+  const onDone = ()=>{
+    deferredRenderPending = false;
+    el.removeEventListener('blur', onDone);
+    renderAll();
+  };
+  el.addEventListener('blur', onDone, {once:true});
+  setTimeout(()=>{ if(deferredRenderPending) onDone(); }, 3000);
 }
 
 /* ---------------- 렌더링 ---------------- */
