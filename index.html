@@ -752,36 +752,62 @@ function renderRoster(deptKey){
   tbody.querySelectorAll('.roster-chief').forEach(el=>{
     el.addEventListener('change', ()=>{
       const person = state[deptKey].roster.find(x=>x.id===el.dataset.id);
-      if(person){ person.chief = el.checked; queueSaveRoster(deptKey); }
+      if(person){ person.chief = el.checked; saveRoster(deptKey); renderReportPreview(); }
     });
   });
   tbody.querySelectorAll('.roster-mgr').forEach(el=>{
     el.addEventListener('change', ()=>{
       const person = state[deptKey].roster.find(x=>x.id===el.dataset.id);
-      if(person){ person.manager = el.checked; queueSaveRoster(deptKey); }
+      if(person){ person.manager = el.checked; saveRoster(deptKey); renderReportPreview(); }
     });
   });
   tbody.querySelectorAll('.roster-del').forEach(el=>{
     el.addEventListener('click', ()=>{
       if(!confirm('해당 인원을 명단에서 삭제하시겠습니까? (지금까지 입력된 업무내용/근태 기록은 보존됩니다)')) return;
       state[deptKey].roster = state[deptKey].roster.filter(x=>x.id!==el.dataset.id);
-      queueSaveRoster(deptKey);
+      saveRoster(deptKey);
       renderAll();
     });
   });
 }
 
 /* ---------------- 탭/부서 전환 ---------------- */
+function renderTabContent(tab){
+  if(tab==='report'){ renderReportPreview(); return; }
+  if(currentDept==='combined'){
+    if(tab==='work') renderCombinedWork();
+    else if(tab==='note') renderCombinedNote();
+    else if(tab==='att') renderCombinedSummary();
+    return;
+  }
+  if(tab==='work') renderWork(currentDept);
+  else if(tab==='note') renderNote(currentDept);
+  else if(tab==='att'){ renderAtt(currentDept); renderSummary(currentDept); }
+  else if(tab==='roster') renderRoster(currentDept);
+}
+
 function switchTab(tab){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
   document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active', p.id==='panel-'+tab));
+  renderTabContent(tab); // 탭을 열 때마다 최신 상태로 다시 그려서, 방금 입력한 내용이 다른 탭에서도 바로 보이게 함
 }
 document.querySelectorAll('.tab-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=> switchTab(btn.dataset.tab));
+  btn.addEventListener('click', ()=>{ flushPendingSaves(); switchTab(btn.dataset.tab); });
 });
+
+/* 탭/부서/주차를 이동하기 직전에, 아직 저장 대기 중(디바운스)인 변경사항을 즉시 저장해서
+   전환 도중 데이터가 유실되는 것을 방지 */
+function flushPendingSaves(){
+  DEPTS.forEach(d=>{
+    if(saveWeekTimers[d]){ clearTimeout(saveWeekTimers[d]); saveWeekTimers[d]=null; saveWeekData(d); }
+    if(saveRosterTimers[d]){ clearTimeout(saveRosterTimers[d]); saveRosterTimers[d]=null; saveRoster(d); }
+  });
+}
+window.addEventListener('beforeunload', ()=>{ flushPendingSaves(); });
 
 document.querySelectorAll('.dept-btn').forEach(btn=>{
   btn.addEventListener('click', async ()=>{
+    flushPendingSaves();
     currentDept = btn.dataset.dept;
     updateHeaderForDept();
     renderAll();
@@ -790,13 +816,15 @@ document.querySelectorAll('.dept-btn').forEach(btn=>{
   });
 });
 
-document.getElementById('prevWeek').addEventListener('click', async ()=>{ currentMonday = addDays(currentMonday,-7); await loadAll(currentMonday); await refreshWeekList(); loadReportExtraInputs(); });
-document.getElementById('nextWeek').addEventListener('click', async ()=>{ currentMonday = addDays(currentMonday,7); await loadAll(currentMonday); await refreshWeekList(); loadReportExtraInputs(); });
-document.getElementById('thisWeekBtn').addEventListener('click', async ()=>{ currentMonday = getPlanningMonday(); await loadAll(currentMonday); await refreshWeekList(); loadReportExtraInputs(); });
+document.getElementById('prevWeek').addEventListener('click', async ()=>{ flushPendingSaves(); currentMonday = addDays(currentMonday,-7); renderPeriod(); await loadAll(currentMonday); await refreshWeekList(); loadReportExtraInputs(); });
+document.getElementById('nextWeek').addEventListener('click', async ()=>{ flushPendingSaves(); currentMonday = addDays(currentMonday,7); renderPeriod(); await loadAll(currentMonday); await refreshWeekList(); loadReportExtraInputs(); });
+document.getElementById('thisWeekBtn').addEventListener('click', async ()=>{ flushPendingSaves(); currentMonday = getPlanningMonday(); renderPeriod(); await loadAll(currentMonday); await refreshWeekList(); loadReportExtraInputs(); });
 document.getElementById('weekSelect').addEventListener('change', async (e)=>{
   if(!e.target.value) return;
+  flushPendingSaves();
   const [y,m,d] = e.target.value.split('-').map(Number);
   currentMonday = new Date(y,m-1,d);
+  renderPeriod();
   await loadAll(currentMonday);
   await refreshWeekList();
   loadReportExtraInputs();
@@ -824,7 +852,8 @@ document.getElementById('addRosterRow').addEventListener('click', ()=>{
   const id = genId();
   state[deptKey].roster.push({id, rank:'', name:'', chief:false, manager:false});
   state[deptKey].weekData.people[id] = blankPersonData();
-  queueSaveRoster(deptKey);
+  saveRoster(deptKey);
+  saveWeekData(deptKey);
   renderAll();
 });
 
@@ -1189,10 +1218,16 @@ if('serviceWorker' in navigator){
 
 // init
 (async function init(){
+  renderPeriod();               // 날짜 표시는 서버 통신 결과와 무관하게 즉시 표시
   updateHeaderForDept();
-  await loadAll(currentMonday);
-  await refreshWeekList();
-  loadReportExtraInputs();
+  try{
+    await loadAll(currentMonday);
+    await refreshWeekList();
+    loadReportExtraInputs();
+  }catch(e){
+    console.error('초기화 중 오류:', e);
+    setSaveState('error');
+  }
 })();
 </script>
 </body>
