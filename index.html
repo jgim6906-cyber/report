@@ -401,8 +401,8 @@
 /* =========================================================
    Supabase 설정 — Project URL / anon public key를 입력하세요.
    ========================================================= */
-const SUPABASE_URL = 'https://YOUR-PROJECT-REF.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR-ANON-PUBLIC-KEY';
+const SUPABASE_URL = 'https://qnythgtyihxvmwttsotg.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFueXRoZ3R5aWh4dm13dHRzb3RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyOTcxNTUsImV4cCI6MjEwMjg3MzE1NX0.tPIOAeuVHiTfWmcj9VzxI6buv-8Zjrb2s9EEErsyVJA';
 const supabaseClient = (SUPABASE_URL.includes('YOUR-PROJECT-REF') || !window.supabase)
   ? null
   : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
