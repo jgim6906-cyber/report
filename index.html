@@ -118,6 +118,75 @@
   .xlsx-btn:hover{background:var(--navy-deep);}
   .xlsx-btn:active{transform:translateY(1px);}
   .xlsx-btn svg{width:15px;height:15px;}
+  .print-btn{display:flex;align-items:center;gap:8px;background:var(--teal);color:#fff;border:none;padding:11px 20px;border-radius:9px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s,transform .1s;box-shadow:0 8px 18px -8px rgba(47,111,107,0.45);}
+  .print-btn:hover{background:#245451;}
+  .print-btn:active{transform:translateY(1px);}
+  .print-btn svg{width:15px;height:15px;}
+
+  /* ---------- 인쇄 전용 영역 ---------- */
+  #printArea{display:none;}
+  .print-title{font-family:'Noto Serif KR',serif;font-weight:900;font-size:22px;text-align:center;margin-bottom:4px;color:#111;}
+  .print-meta{text-align:center;font-size:12px;color:#333;margin-bottom:20px;}
+  .print-section-title{font-family:'Noto Serif KR',serif;font-weight:700;font-size:14px;margin:18px 0 8px;border-bottom:2px solid #152238;padding-bottom:5px;color:#111;}
+  table.print-summary, table.print-people{width:100%;border-collapse:collapse;margin-bottom:6px;}
+  table.print-summary th, table.print-summary td, table.print-people th, table.print-people td{border:1px solid #999;padding:7px 9px;font-size:11.5px;text-align:center;color:#111;}
+  table.print-summary th, table.print-people th{background:#eee;font-weight:700;}
+  table.print-people td.p-text{text-align:left;line-height:1.55;}
+  table.print-people td.p-name{white-space:nowrap;}
+  .p-rank{display:block;font-size:10px;color:#555;margin-top:2px;}
+
+  /* ---------- 보고서 탭 ---------- */
+  .report-dept-select{border:1px solid var(--paper-line);background:#fff;color:var(--navy);border-radius:8px;padding:9px 14px;font-size:13px;font-family:inherit;cursor:pointer;font-weight:700;}
+  .report-extra-box{background:#faf8f2;border:1px solid var(--paper-line);border-radius:10px;padding:14px 16px;}
+  .report-extra-title{font-size:12.5px;font-weight:700;color:var(--navy);margin-bottom:10px;}
+  .report-extra-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+  .report-extra-grid label{font-size:12px;font-weight:700;color:var(--ink-soft);display:flex;flex-direction:column;gap:5px;}
+  .report-extra-grid textarea{font-family:inherit;font-size:12.5px;border:1px solid var(--paper-line);border-radius:7px;padding:8px 9px;resize:vertical;outline:none;}
+  .report-extra-grid textarea:focus{border-color:var(--gold-light);background:#fffdf5;}
+  .report-preview-wrap{background:#8a8a8a;border-radius:10px;padding:22px;overflow-x:auto;}
+
+  /* 보고서 문서 스타일 (미리보기 + 인쇄 공용) */
+  .doc-page{width:210mm;min-height:150mm;margin:0 auto 22px;background:#fff;padding:10mm 11mm;box-shadow:0 6px 20px rgba(0,0,0,0.3);color:#111;box-sizing:border-box;}
+  .doc-page table{border-collapse:collapse;width:100%;table-layout:fixed;}
+  .doc-page td,.doc-page th{border:1.3px solid #333;padding:6px 9px;vertical-align:middle;word-break:break-all;}
+  .doc-title-row td{border:2px solid #333;height:80px;padding:0;}
+  .doc-title-cell{width:56%;text-align:center;font-size:21px;font-weight:900;letter-spacing:3px;line-height:1.4;vertical-align:middle;}
+  .doc-title-cell small{display:block;font-size:12px;font-weight:500;letter-spacing:1.5px;margin-top:3px;color:#333;}
+  .doc-sign-outer{width:44%;padding:0 !important;vertical-align:top;}
+  .doc-sign-table{width:100%;height:80px;}
+  .doc-sign-table td{border:1px solid #333;text-align:center;font-size:13px;font-weight:700;padding:0;}
+  .doc-sign-label{width:34px;font-size:13px;font-weight:700;writing-mode:vertical-rl;letter-spacing:3px;}
+  .doc-sign-table .doc-head-row td{height:24px;}
+  .doc-sign-table .doc-sign-box{height:56px;}
+  .doc-meta-label{background:#f0f0f0;font-weight:700;font-size:13px;text-align:center;width:13%;}
+  .doc-meta-value{font-size:13.5px;padding:8px 12px;width:37%;}
+  .doc-content-head td{background:#eaeaea;text-align:center;font-weight:700;font-size:13.5px;padding:7px;}
+  .doc-content-body td{padding:0;vertical-align:top;}
+  .doc-content-fixed{height:44mm;overflow:hidden;box-sizing:border-box;font-size:13px;line-height:1.7;padding:9px 12px;white-space:pre-line;word-break:break-all;}
+  .doc-mgr-gap{height:5px;border:none !important;}
+  .doc-slogan{text-align:center;font-weight:900;font-size:14px;line-height:1.7;padding:7px 6px;letter-spacing:.5px;}
+  .doc-att-title td{background:#f0f0f0;text-align:center;font-weight:700;font-size:13.5px;padding:6px;}
+  .doc-att-cat{width:12%;font-weight:700;font-size:13px;text-align:center;background:#fafafa;vertical-align:top;padding-top:9px;}
+  .doc-att-val{font-size:12.5px;line-height:1.7;vertical-align:top;padding:8px 11px;min-height:20px;white-space:pre-line;width:21%;}
+  .doc-att-val .doc-count{font-weight:700;color:#1a3d6d;}
+  .doc-att-empty{color:#999;font-style:italic;}
+  .doc-instr-title td{background:#f0f0f0;text-align:center;font-weight:700;font-size:13.5px;padding:6px;}
+  .doc-instr-body td{height:44px;vertical-align:top;font-size:13px;padding:8px 12px;}
+  .doc-team-row td{background:#f4f1e9 !important;font-weight:700;color:#152238;text-align:left;padding:9px 14px;font-family:'Noto Serif KR',serif;font-size:13px;}
+  .doc-staff-name{width:11%;text-align:center;font-weight:700;font-size:13.5px;background:#fafafa;vertical-align:middle;}
+  .doc-staff-name .doc-staff-rank{display:block;font-weight:500;font-size:11.5px;color:#555;margin-top:3px;}
+  .doc-staff-content{font-size:13px;line-height:1.85;vertical-align:top;padding:9px 12px;white-space:pre-line;width:44.5%;}
+  .doc-staff-head td{background:#eaeaea;text-align:center;font-weight:700;font-size:13px;padding:6px;}
+  .doc-staff-table thead{display:table-header-group;}
+  .doc-staff-table tbody tr{break-inside:avoid;page-break-inside:avoid;}
+
+  @media print{
+    body *{visibility:hidden;}
+    #printArea, #printArea *{visibility:visible;}
+    #printArea{display:block !important;position:absolute;left:0;top:0;width:100%;padding:0;}
+    .doc-page{box-shadow:none;margin:0;width:auto !important;min-height:auto;padding:4mm 8mm !important;page-break-after:always;}
+    @page{ size:A4; margin:8mm; }
+  }
 
   .roster-input{width:100%;border:1px solid transparent;background:transparent;padding:10px 12px;font-family:inherit;font-size:13px;outline:none;border-radius:6px;}
   .roster-input:focus{background:#fffdf5;border-color:var(--gold-light);}
@@ -158,7 +227,7 @@
         <span class="period-label" id="periodLabel">-</span>
         <button id="nextWeek" title="다음 주">›</button>
       </div>
-      <button class="today-btn" id="thisWeekBtn" title="실제 달력상 다음 주(=이번 주에 작성하는 대상 주)로 이동">작성 대상 주</button>
+      <button class="today-btn" id="thisWeekBtn" title="월~목요일에는 이번 주, 금~일요일에는 다음 주(차주 작성 모드)로 이동">작성 대상 주</button>
       <select class="week-select" id="weekSelect"><option value="">저장된 주차 조회</option></select>
       <div class="save-state"><span class="dot" id="saveDot"></span><span id="saveText">연결 중...</span></div>
     </div>
@@ -189,14 +258,14 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
         인원관리
       </button>
+      <button class="tab-btn" data-tab="report">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        보고서
+      </button>
     </div>
 
     <div class="toolbar">
       <span class="hint-inline" id="hintInline">이 데이터는 부서원 전체에게 공유되어 누구나 조회·수정할 수 있습니다.</span>
-      <button class="xlsx-btn" id="exportBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
-        엑셀로 다운로드
-      </button>
     </div>
 
     <div class="panel active" id="panel-work">
@@ -279,21 +348,61 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th style="width:130px;">직급</th><th>이름</th><th style="width:80px;">부서장</th><th style="width:80px;">삭제</th></tr></thead>
+          <thead><tr><th style="width:120px;">직급</th><th>이름</th><th style="width:70px;">실장</th><th style="width:70px;">부서장</th><th style="width:80px;">삭제</th></tr></thead>
           <tbody id="rosterBody"></tbody>
         </table>
       </div>
     </div>
-  </div>
 
+    <div class="panel" id="panel-report">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">보고서</div>
+          <div class="panel-desc">부서를 선택해 부서장 보고서 · 부서원 보고서를 확인하고, 인쇄하거나 엑셀로 내려받으세요.</div>
+        </div>
+        <select id="reportDeptSelect" class="report-dept-select">
+          <option value="biz">업무PM팀</option>
+          <option value="construction">공사PM팀</option>
+          <option value="combined">PM실 (통합)</option>
+        </select>
+      </div>
+
+      <div class="report-extra-box">
+        <div class="report-extra-title">근태 보완 입력 (자동 집계되지 않는 항목 — 직접 작성)</div>
+        <div class="report-extra-grid">
+          <label>결근<textarea id="extraAbsent" rows="2" placeholder="해당 인원 없으면 비워두세요"></textarea></label>
+          <label>지각<textarea id="extraLate" rows="2" placeholder="해당 인원 없으면 비워두세요"></textarea></label>
+          <label>반차<textarea id="extraHalfDay" rows="2" placeholder="해당 인원 없으면 비워두세요"></textarea></label>
+          <label>기타<textarea id="extraMisc" rows="2" placeholder="예: 예비군 훈련 (이우근) 8/24"></textarea></label>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin:16px 0;">
+        <button class="print-btn" id="reportPrintBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          인쇄하기
+        </button>
+        <button class="xlsx-btn" id="reportExcelBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+          엑셀로 다운로드
+        </button>
+      </div>
+
+      <div class="report-preview-wrap">
+        <div id="reportPreview"></div>
+      </div>
+    </div>
+  </div>
 </div>
+
+<div id="printArea"></div>
 
 <script>
 /* =========================================================
    Supabase 설정 — Project URL / anon public key를 입력하세요.
    ========================================================= */
-const SUPABASE_URL = 'https://qnythgtyihxvmwttsotg.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFueXRoZ3R5aWh4dm13dHRzb3RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyOTcxNTUsImV4cCI6MjEwMjg3MzE1NX0.tPIOAeuVHiTfWmcj9VzxI6buv-8Zjrb2s9EEErsyVJA';
+const SUPABASE_URL = 'https://YOUR-PROJECT-REF.supabase.co';
+const SUPABASE_ANON_KEY = 'YOUR-ANON-PUBLIC-KEY';
 const supabaseClient = (SUPABASE_URL.includes('YOUR-PROJECT-REF') || !window.supabase)
   ? null
   : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -312,9 +421,14 @@ function genId(){return 'p_'+Math.random().toString(36).slice(2,9)+Date.now().to
 function escapeHtml(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function blankPersonData(){return {prev:'',cur:'',note:'',att:{연차:[false,false,false,false,false],외근:[false,false,false,false,false],도시락:[false,false,false,false,false]}};}
 
-/* 업무 특성상 "이번 주"에는 다음 주 계획을 미리 작성하므로,
-   기본으로 보여주는 기준 주는 실제 달력상 다음 주로 설정합니다. */
-function getPlanningMonday(){ return addDays(getMonday(new Date()), 7); }
+/* 매주 금요일에 차주 보고서 작성을 요청하는 업무 방식에 맞춰:
+   - 월~목요일: 실제 이번 주(진행 중인 주)를 기본으로 보여줘서, 이미 적어둔 특이사항·도시락 등을 자연스럽게 재확인하게 됨
+   - 금~일요일: 다음 주(차주)로 넘어가서 미리 작성하는 모드가 됨 */
+function getPlanningMonday(){
+  const day = new Date().getDay(); // 0=일,1=월,...,5=금,6=토
+  const isWritingWindow = (day===5 || day===6 || day===0);
+  return isWritingWindow ? addDays(getMonday(new Date()), 7) : getMonday(new Date());
+}
 let currentMonday = getPlanningMonday();
 let currentDept = 'biz';
 let state = {
@@ -328,6 +442,7 @@ let rtChannel = null;
 function ensurePeopleData(deptKey){
   const s = state[deptKey];
   s.roster.forEach(p=>{ if(!s.weekData.people[p.id]) s.weekData.people[p.id] = blankPersonData(); });
+  if(!s.weekData.extra) s.weekData.extra = {absent:'', late:'', halfDay:'', misc:''};
 }
 
 function setSaveState(kind){
@@ -487,6 +602,7 @@ function renderAll(){
   }else{
     renderWork(currentDept); renderNote(currentDept); renderAtt(currentDept); renderSummary(currentDept); renderRoster(currentDept);
   }
+  renderReportPreview();
 }
 
 function renderWork(deptKey){
@@ -622,6 +738,7 @@ function renderRoster(deptKey){
     tr.innerHTML = `
       <td><input type="text" class="roster-input" data-id="${p.id}" data-field="rank" value="${escapeHtml(p.rank)}" placeholder="직급"></td>
       <td><input type="text" class="roster-input" data-id="${p.id}" data-field="name" value="${escapeHtml(p.name)}" placeholder="이름"></td>
+      <td class="roster-mgr-cell"><input type="checkbox" class="roster-chief" data-id="${p.id}" ${p.chief?'checked':''}></td>
       <td class="roster-mgr-cell"><input type="checkbox" class="roster-mgr" data-id="${p.id}" ${p.manager?'checked':''}></td>
       <td style="text-align:center;"><button class="roster-del" data-id="${p.id}">삭제</button></td>`;
     tbody.appendChild(tr);
@@ -630,6 +747,12 @@ function renderRoster(deptKey){
     el.addEventListener('input', ()=>{
       const person = state[deptKey].roster.find(x=>x.id===el.dataset.id);
       if(person){ person[el.dataset.field] = el.value; queueSaveRoster(deptKey); }
+    });
+  });
+  tbody.querySelectorAll('.roster-chief').forEach(el=>{
+    el.addEventListener('change', ()=>{
+      const person = state[deptKey].roster.find(x=>x.id===el.dataset.id);
+      if(person){ person.chief = el.checked; queueSaveRoster(deptKey); }
     });
   });
   tbody.querySelectorAll('.roster-mgr').forEach(el=>{
@@ -667,15 +790,16 @@ document.querySelectorAll('.dept-btn').forEach(btn=>{
   });
 });
 
-document.getElementById('prevWeek').addEventListener('click', async ()=>{ currentMonday = addDays(currentMonday,-7); await loadAll(currentMonday); await refreshWeekList(); });
-document.getElementById('nextWeek').addEventListener('click', async ()=>{ currentMonday = addDays(currentMonday,7); await loadAll(currentMonday); await refreshWeekList(); });
-document.getElementById('thisWeekBtn').addEventListener('click', async ()=>{ currentMonday = getPlanningMonday(); await loadAll(currentMonday); await refreshWeekList(); });
+document.getElementById('prevWeek').addEventListener('click', async ()=>{ currentMonday = addDays(currentMonday,-7); await loadAll(currentMonday); await refreshWeekList(); loadReportExtraInputs(); });
+document.getElementById('nextWeek').addEventListener('click', async ()=>{ currentMonday = addDays(currentMonday,7); await loadAll(currentMonday); await refreshWeekList(); loadReportExtraInputs(); });
+document.getElementById('thisWeekBtn').addEventListener('click', async ()=>{ currentMonday = getPlanningMonday(); await loadAll(currentMonday); await refreshWeekList(); loadReportExtraInputs(); });
 document.getElementById('weekSelect').addEventListener('change', async (e)=>{
   if(!e.target.value) return;
   const [y,m,d] = e.target.value.split('-').map(Number);
   currentMonday = new Date(y,m-1,d);
   await loadAll(currentMonday);
   await refreshWeekList();
+  loadReportExtraInputs();
 });
 
 document.querySelectorAll('[data-clear]').forEach(btn=>{
@@ -698,7 +822,7 @@ document.getElementById('addRosterRow').addEventListener('click', ()=>{
   if(currentDept==='combined') return;
   const deptKey = currentDept;
   const id = genId();
-  state[deptKey].roster.push({id, rank:'', name:'', manager:false});
+  state[deptKey].roster.push({id, rank:'', name:'', chief:false, manager:false});
   state[deptKey].weekData.people[id] = blankPersonData();
   queueSaveRoster(deptKey);
   renderAll();
@@ -722,6 +846,255 @@ async function refreshWeekList(){
     });
     sel.value = currentVal;
   }catch(e){ console.error(e); }
+}
+
+/* ---------------- 보고서 탭 ---------------- */
+const reportExtraFields = [
+  ['extraAbsent','absent'], ['extraLate','late'], ['extraHalfDay','halfDay'], ['extraMisc','misc']
+];
+
+function currentReportDept(){ return document.getElementById('reportDeptSelect').value; }
+
+function loadReportExtraInputs(){
+  const deptKey = currentReportDept();
+  const extra = (deptKey==='combined') ? (state.biz.weekData.extra||{}) : (state[deptKey].weekData.extra||{});
+  reportExtraFields.forEach(([elId,field])=>{
+    document.getElementById(elId).value = extra[field] || '';
+  });
+}
+
+function attachReportExtraListeners(){
+  reportExtraFields.forEach(([elId,field])=>{
+    document.getElementById(elId).addEventListener('input', (e)=>{
+      const deptKey = currentReportDept();
+      if(deptKey==='combined') return; // 통합 화면은 조회 전용이라 별도 저장 안 함
+      if(!state[deptKey].weekData.extra) state[deptKey].weekData.extra = {absent:'',late:'',halfDay:'',misc:''};
+      state[deptKey].weekData.extra[field] = e.target.value;
+      queueSaveWeek(deptKey);
+    });
+  });
+}
+attachReportExtraListeners();
+
+document.getElementById('reportDeptSelect').addEventListener('change', ()=>{
+  loadReportExtraInputs();
+  renderReportPreview();
+  const isCombined = currentReportDept()==='combined';
+  reportExtraFields.forEach(([elId])=> document.getElementById(elId).disabled = isCombined);
+});
+
+document.getElementById('reportPrintBtn').addEventListener('click', ()=>{
+  document.getElementById('printArea').innerHTML = buildReportDocs(currentReportDept());
+  window.print();
+});
+
+document.getElementById('reportExcelBtn').addEventListener('click', ()=>{
+  try{ const d = currentReportDept(); d==='combined' ? exportExcelCombined() : exportExcel(d); }
+  catch(e){ alert('엑셀 생성 중 오류가 발생했습니다: ' + e.message); }
+});
+
+function renderReportPreview(){
+  document.getElementById('reportPreview').innerHTML = buildReportDocs(currentReportDept());
+}
+
+/* 특정 인원 목록 중, 해당 카테고리에 하루라도 체크된 사람 이름을 모아 "N명 — 이름1, 이름2" 형태로 반환 (없으면 빈칸) */
+function attNamesForCat(deptKey, cat){
+  const roster = state[deptKey].roster, pdata = state[deptKey].weekData.people;
+  const names = roster.filter(p=> pdata[p.id] && DAYS.some((d,di)=>pdata[p.id].att[cat][di])).map(p=>p.name);
+  if(!names.length) return '';
+  return `<span class="doc-count">${names.length}명</span> — ${names.map(escapeHtml).join(', ')}`;
+}
+function combinedAttNames(cat){
+  const names = [];
+  DEPTS.forEach(d=>{
+    const roster = state[d].roster, pdata = state[d].weekData.people;
+    roster.forEach(p=>{ if(pdata[p.id] && DAYS.some((dd,di)=>pdata[p.id].att[cat][di])) names.push(p.name); });
+  });
+  if(!names.length) return '';
+  return `<span class="doc-count">${names.length}명</span> — ${names.map(escapeHtml).join(', ')}`;
+}
+function extraOrEmpty(text){
+  return (text && text.trim()) ? escapeHtml(text).replace(/\n/g,'<br>') : '';
+}
+
+function docSignTable(){
+  return `
+    <table class="doc-sign-table">
+      <tr class="doc-head-row">
+        <td rowspan="2" class="doc-sign-label">결&nbsp;&nbsp;재</td>
+        <td>부 서 장</td><td>실 장</td><td>상 무</td><td>전 무</td><td>대 표</td>
+      </tr>
+      <tr>
+        <td class="doc-sign-box"></td><td class="doc-sign-box"></td><td class="doc-sign-box"></td><td class="doc-sign-box"></td><td class="doc-sign-box"></td>
+      </tr>
+    </table>`;
+}
+
+function managerBlockHtml(deptKeyForLabel, roleLabel, personName, prevText, curText){
+  const friday = addDays(currentMonday,4);
+  return `
+    <table>
+      <tr><td class="doc-meta-label">부 서 명</td><td class="doc-meta-value">${escapeHtml(deptKeyForLabel)}</td><td class="doc-meta-label">작 성 일 자</td><td class="doc-meta-value">${krDate(currentMonday)} ~ ${krDate(friday)}</td></tr>
+      <tr><td class="doc-meta-label">보고자 직책</td><td class="doc-meta-value">${escapeHtml(roleLabel)}</td><td class="doc-meta-label">보고자 성명</td><td class="doc-meta-value">${escapeHtml(personName)}</td></tr>
+      <tr class="doc-content-head"><td colspan="2">전주 주요 업무 내용</td><td colspan="2">금주 주요 업무 내용</td></tr>
+      <tr class="doc-content-body">
+        <td colspan="2"><div class="doc-content-fixed">${(prevText||'').trim() ? escapeHtml(prevText) : '해당 없음'}</div></td>
+        <td colspan="2"><div class="doc-content-fixed">${(curText||'').trim() ? escapeHtml(curText) : '해당 없음'}</div></td>
+      </tr>
+    </table>
+    <div class="doc-mgr-gap"></div>`;
+}
+
+/* 부서장 보고서: 실장(chief) 체크된 사람은 "PM실" 대표로, 부서장(manager) 체크된 사람은 자기 부서명으로 각각 블록 생성 */
+function buildDeptHeadReportHtml(deptKey){
+  const roster = state[deptKey].roster, pdata = state[deptKey].weekData.people;
+  const chiefs = roster.filter(p=>p.chief);
+  const heads = roster.filter(p=>p.manager);
+  let blocks = '';
+  chiefs.forEach(p=>{
+    const pd = pdata[p.id] || blankPersonData();
+    blocks += managerBlockHtml('PM실', p.rank||'실장', p.name, pd.prev, pd.cur);
+  });
+  heads.forEach(p=>{
+    const pd = pdata[p.id] || blankPersonData();
+    blocks += managerBlockHtml(DEPT_LABELS[deptKey], p.rank||'부서장', p.name, pd.prev, pd.cur);
+  });
+  if(!blocks){
+    blocks = `<div style="padding:14px; text-align:center; color:#999; font-size:13px;">인원관리 탭에서 실장 또는 부서장을 체크해주세요.</div>`;
+  }
+  const extra = state[deptKey].weekData.extra || {absent:'',late:'',halfDay:'',misc:''};
+
+  return `
+    <div class="doc-page">
+      <table class="doc-title-row">
+        <tr>
+          <td class="doc-title-cell">주 간 업 무 보 고 서<small>( 부 서 장 )</small></td>
+          <td class="doc-sign-outer">${docSignTable()}</td>
+        </tr>
+      </table>
+      ${blocks}
+      <div class="doc-slogan">근검 절약을 생활화 합시다<br>150MW 수주계약, 110MW 시공완성 꼭! 이루어냅시다.</div>
+      <table>
+        <tr class="doc-att-title"><td colspan="6">부서원 근태현황</td></tr>
+        <tr>
+          <td class="doc-att-cat">결근</td><td class="doc-att-val">${extraOrEmpty(extra.absent)}</td>
+          <td class="doc-att-cat">지각</td><td class="doc-att-val">${extraOrEmpty(extra.late)}</td>
+          <td class="doc-att-cat">일반외근</td><td class="doc-att-val">${attNamesForCat(deptKey,'외근')}</td>
+        </tr>
+        <tr>
+          <td class="doc-att-cat">반차</td><td class="doc-att-val">${extraOrEmpty(extra.halfDay)}</td>
+          <td class="doc-att-cat">연차</td><td class="doc-att-val">${attNamesForCat(deptKey,'연차')}</td>
+          <td class="doc-att-cat">기타</td><td class="doc-att-val">${extraOrEmpty(extra.misc)}</td>
+        </tr>
+      </table>
+      <div class="doc-slogan" style="margin-top:6px;">안전에 만전을 기해 무재해 달성을 이루어냅시다.</div>
+      <table>
+        <tr class="doc-instr-title"><td>지 시 사 항</td></tr>
+        <tr class="doc-instr-body"><td>&nbsp;</td></tr>
+      </table>
+    </div>`;
+}
+
+function staffRowsHtml(deptKey){
+  const roster = state[deptKey].roster, pdata = state[deptKey].weekData.people;
+  const staff = roster.filter(p=>!p.chief && !p.manager);
+  return staff.map(p=>{
+    const pd = pdata[p.id] || blankPersonData();
+    return `
+      <tr>
+        <td class="doc-staff-name">${escapeHtml(p.name)}<span class="doc-staff-rank">${escapeHtml(p.rank)}</span></td>
+        <td class="doc-staff-content">${(pd.prev||'').trim() ? escapeHtml(pd.prev) : '해당 없음'}</td>
+        <td class="doc-staff-content">${(pd.cur||'').trim() ? escapeHtml(pd.cur) : '해당 없음'}</td>
+      </tr>`;
+  }).join('');
+}
+
+function buildStaffReportHtml(deptKey){
+  const friday = addDays(currentMonday,4);
+  return `
+    <div class="doc-page">
+      <table class="doc-title-row">
+        <tr>
+          <td class="doc-title-cell" style="font-size:19px; letter-spacing:2px;">주 간 업 무 보 고 서 ( 부 서 원 용 )</td>
+          <td class="doc-sign-outer">${docSignTable()}</td>
+        </tr>
+      </table>
+      <table>
+        <tr><td class="doc-meta-label">부 서 명</td><td class="doc-meta-value">${DEPT_LABELS[deptKey]}</td><td class="doc-meta-label">작 성 일 자</td><td class="doc-meta-value">${krDate(currentMonday)} ~ ${krDate(friday)}</td></tr>
+      </table>
+      <table class="doc-staff-table">
+        <thead><tr class="doc-staff-head"><td style="width:11%;">인원</td><td>전주 주요 업무 내용</td><td>금주 주요 업무 내용</td></tr></thead>
+        <tbody>${staffRowsHtml(deptKey) || `<tr><td colspan="3" style="text-align:center; color:#999; padding:14px;">인원이 없습니다.</td></tr>`}</tbody>
+      </table>
+    </div>`;
+}
+
+function buildCombinedStaffReportHtml(){
+  const friday = addDays(currentMonday,4);
+  let rows = '';
+  DEPTS.forEach(d=>{
+    rows += `<tr class="doc-team-row"><td colspan="3">${DEPT_LABELS[d]}</td></tr>` + staffRowsHtml(d);
+  });
+  return `
+    <div class="doc-page">
+      <table class="doc-title-row">
+        <tr>
+          <td class="doc-title-cell" style="font-size:19px; letter-spacing:2px;">주 간 업 무 보 고 서 ( 부 서 원 용 )</td>
+          <td class="doc-sign-outer">${docSignTable()}</td>
+        </tr>
+      </table>
+      <table>
+        <tr><td class="doc-meta-label">부 서 명</td><td class="doc-meta-value">PM실 (통합)</td><td class="doc-meta-label">작 성 일 자</td><td class="doc-meta-value">${krDate(currentMonday)} ~ ${krDate(friday)}</td></tr>
+      </table>
+      <table class="doc-staff-table">
+        <thead><tr class="doc-staff-head"><td style="width:11%;">인원</td><td>전주 주요 업무 내용</td><td>금주 주요 업무 내용</td></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+function buildCombinedDeptHeadReportHtml(){
+  let blocks = '';
+  DEPTS.forEach(d=>{
+    const roster = state[d].roster, pdata = state[d].weekData.people;
+    roster.filter(p=>p.chief).forEach(p=>{
+      const pd = pdata[p.id] || blankPersonData();
+      blocks += managerBlockHtml('PM실', p.rank||'실장', p.name, pd.prev, pd.cur);
+    });
+    roster.filter(p=>p.manager).forEach(p=>{
+      const pd = pdata[p.id] || blankPersonData();
+      blocks += managerBlockHtml(DEPT_LABELS[d], p.rank||'부서장', p.name, pd.prev, pd.cur);
+    });
+  });
+  if(!blocks) blocks = `<div style="padding:14px; text-align:center; color:#999; font-size:13px;">등록된 실장/부서장이 없습니다.</div>`;
+  return `
+    <div class="doc-page">
+      <table class="doc-title-row">
+        <tr>
+          <td class="doc-title-cell">주 간 업 무 보 고 서<small>( 부 서 장 )</small></td>
+          <td class="doc-sign-outer">${docSignTable()}</td>
+        </tr>
+      </table>
+      ${blocks}
+      <div class="doc-slogan">근검 절약을 생활화 합시다<br>150MW 수주계약, 110MW 시공완성 꼭! 이루어냅시다.</div>
+      <table>
+        <tr class="doc-att-title"><td colspan="6">PM실 통합 근태현황</td></tr>
+        <tr>
+          <td class="doc-att-cat">일반외근</td><td class="doc-att-val" colspan="5">${combinedAttNames('외근')}</td>
+        </tr>
+        <tr>
+          <td class="doc-att-cat">연차</td><td class="doc-att-val" colspan="5">${combinedAttNames('연차')}</td>
+        </tr>
+      </table>
+      <div class="doc-slogan" style="margin-top:6px;">안전에 만전을 기해 무재해 달성을 이루어냅시다.</div>
+    </div>`;
+}
+
+function buildReportDocs(deptKey){
+  if(deptKey==='combined'){
+    return buildCombinedDeptHeadReportHtml() + buildCombinedStaffReportHtml();
+  }
+  return buildDeptHeadReportHtml(deptKey) + buildStaffReportHtml(deptKey);
 }
 
 /* ---------------- 엑셀 다운로드 ---------------- */
@@ -772,7 +1145,7 @@ function exportExcel(deptKey){
   wsData['!cols'] = [{wch:14},{wch:34},{wch:34},{wch:26},{wch:10},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5}];
   XLSX.utils.book_append_sheet(wb, wsData, '데이터');
 
-  const staff = state[deptKey].roster.filter(p=>!p.manager);
+  const staff = state[deptKey].roster.filter(p=>!p.manager && !p.chief);
   const pdata = state[deptKey].weekData.people;
   const staffAOA = [['주 간 업 무 보 고 서 (부 서 원 용)'],[`부 서 명 : ${DEPT_LABELS[deptKey]}`],[`일 자 : ${krDate(currentMonday)} ~ ${krDate(friday)}`],['인원','전주 주요 업무 내용','금주 주요 업무 내용','특이사항']];
   staff.forEach(p=>{ const pd=pdata[p.id]; staffAOA.push([`${p.rank} ${p.name}`, pd.prev, pd.cur, pd.note]); });
@@ -819,6 +1192,7 @@ if('serviceWorker' in navigator){
   updateHeaderForDept();
   await loadAll(currentMonday);
   await refreshWeekList();
+  loadReportExtraInputs();
 })();
 </script>
 </body>
