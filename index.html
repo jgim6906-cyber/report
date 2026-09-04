@@ -146,7 +146,12 @@
   .report-preview-wrap{background:#8a8a8a;border-radius:10px;padding:22px;overflow-x:auto;}
 
   /* 보고서 문서 스타일 (미리보기 + 인쇄 공용) */
-  .doc-page{width:210mm;min-height:150mm;margin:0 auto 22px;background:#fff;padding:10mm 11mm;box-shadow:0 6px 20px rgba(0,0,0,0.3);color:#111;box-sizing:border-box;border-left:2px solid #333;border-right:2px solid #333;}
+  .doc-page{width:210mm;min-height:150mm;margin:0 auto 22px;background:#fff;padding:10mm 11mm;box-shadow:0 6px 20px rgba(0,0,0,0.3);color:#111;box-sizing:border-box;}
+  /* 페이지 전체를 감싸는 테두리는 page-break-after가 걸린 .doc-page 자체가 아니라
+     안쪽의 별도 래퍼(.doc-frame)에 줍니다. border/outline을 페이지분할 요소에
+     직접 걸면 크로미움 인쇄 엔진이 계산을 살짝 잘못해 뒤에 빈 페이지가 하나
+     더 생기는 버그가 있어 이를 피하기 위함입니다. */
+  .doc-frame{border:2px solid #333;padding:1.5mm;}
   .doc-page table{border-collapse:collapse;width:100%;table-layout:fixed;}
   .doc-page td,.doc-page th{border:1.3px solid #333;padding:6px 9px;vertical-align:middle;word-break:break-all;}
   .doc-title-row td{border:2px solid #333;height:80px;padding:0;}
@@ -175,14 +180,21 @@
   .doc-staff-name .doc-staff-rank{display:block;font-weight:500;font-size:11.5px;color:#555;margin-top:3px;}
   .doc-staff-content{font-size:13px;line-height:1.85;vertical-align:top;padding:9px 12px;white-space:pre-line;width:44.5%;}
   .doc-staff-head td{background:#eaeaea;text-align:center;font-weight:700;font-size:13px;padding:6px;}
+  /* border-collapse:collapse 상태에서, 같은 행의 두 칸 내용 길이가 서로 많이
+     달라 행 높이가 소수점 픽셀(예: 205.375px)이 되면, 크로미움이 화면에서
+     그 두 칸 사이의 세로 경계선을 안 그리는 렌더링 버그가 있습니다.
+     (인쇄 PDF에서는 안 나타나고 화면 미리보기에서만 나타남)
+     이 표만 border-collapse:separate로 바꿔서 각 칸이 자기 경계선을
+     독립적으로 그리게 하여 회피합니다. */
+  .doc-staff-table{border-collapse:separate !important;border-spacing:0;}
   .doc-staff-table thead{display:table-header-group;}
   .doc-staff-table tbody tr{break-inside:avoid;page-break-inside:avoid;}
 
   @media print{
-    body *{visibility:hidden;}
-    #printArea, #printArea *{visibility:visible;}
-    #printArea{display:block !important;position:absolute;left:0;top:0;width:100%;padding:0;}
-    .doc-page{box-shadow:none;margin:0;width:auto !important;min-height:auto;padding:4mm 3mm !important;page-break-after:always;}
+    .app{display:none !important;}
+    #printArea{display:block !important;}
+    .doc-page{box-shadow:none;margin:0;width:auto !important;min-height:auto;padding:4mm 3mm !important;}
+    .doc-page:not(:last-of-type){page-break-after:always;}
     @page{ size:A4; margin:20mm 8mm 8mm 8mm; }
   }
 
@@ -1149,7 +1161,7 @@ function buildDeptHeadReportHtml(deptKey){
   const extra = state[deptKey].weekData.extra || {absent:'',late:'',halfDay:'',misc:''};
 
   return `
-    <div class="doc-page">
+    <div class="doc-page"><div class="doc-frame">
       <table class="doc-title-row">
         <tr>
           <td class="doc-title-cell">주 간 업 무 보 고 서<small>( 부 서 장 )</small></td>
@@ -1176,7 +1188,7 @@ function buildDeptHeadReportHtml(deptKey){
         <tr class="doc-instr-title"><td>지 시 사 항</td></tr>
         <tr class="doc-instr-body"><td>&nbsp;</td></tr>
       </table>
-    </div>`;
+    </div></div>`;
 }
 
 function staffRowsHtml(deptKey){
@@ -1196,7 +1208,7 @@ function staffRowsHtml(deptKey){
 function buildStaffReportHtml(deptKey){
   const friday = addDays(currentMonday,4);
   return `
-    <div class="doc-page">
+    <div class="doc-page"><div class="doc-frame">
       <table class="doc-title-row">
         <tr>
           <td class="doc-title-cell" style="font-size:19px; letter-spacing:2px;">주 간 업 무 보 고 서 ( 부 서 원 용 )</td>
@@ -1210,7 +1222,7 @@ function buildStaffReportHtml(deptKey){
         <thead><tr class="doc-staff-head"><td style="width:11%;">인원</td><td>전주 주요 업무 내용</td><td>금주 주요 업무 내용</td></tr></thead>
         <tbody>${staffRowsHtml(deptKey) || `<tr><td colspan="3" style="text-align:center; color:#999; padding:14px;">인원이 없습니다.</td></tr>`}</tbody>
       </table>
-    </div>`;
+    </div></div>`;
 }
 
 function buildCombinedStaffReportHtml(){
@@ -1220,7 +1232,7 @@ function buildCombinedStaffReportHtml(){
     rows += `<tr class="doc-team-row"><td colspan="3">${DEPT_LABELS[d]}</td></tr>` + staffRowsHtml(d);
   });
   return `
-    <div class="doc-page">
+    <div class="doc-page"><div class="doc-frame">
       <table class="doc-title-row">
         <tr>
           <td class="doc-title-cell" style="font-size:19px; letter-spacing:2px;">주 간 업 무 보 고 서 ( 부 서 원 용 )</td>
@@ -1234,7 +1246,7 @@ function buildCombinedStaffReportHtml(){
         <thead><tr class="doc-staff-head"><td style="width:11%;">인원</td><td>전주 주요 업무 내용</td><td>금주 주요 업무 내용</td></tr></thead>
         <tbody>${rows}</tbody>
       </table>
-    </div>`;
+    </div></div>`;
 }
 
 function buildCombinedDeptHeadReportHtml(){
@@ -1252,7 +1264,7 @@ function buildCombinedDeptHeadReportHtml(){
   });
   if(!blocks) blocks = `<div style="padding:14px; text-align:center; color:#999; font-size:13px;">등록된 실장/부서장이 없습니다.</div>`;
   return `
-    <div class="doc-page">
+    <div class="doc-page"><div class="doc-frame">
       <table class="doc-title-row">
         <tr>
           <td class="doc-title-cell">주 간 업 무 보 고 서<small>( 부 서 장 )</small></td>
@@ -1271,7 +1283,7 @@ function buildCombinedDeptHeadReportHtml(){
         </tr>
       </table>
       <div class="doc-slogan" style="margin-top:6px;">안전에 만전을 기해 무재해 달성을 이루어냅시다.</div>
-    </div>`;
+    </div></div>`;
 }
 
 function buildReportDocs(deptKey){
