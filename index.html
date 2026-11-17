@@ -581,7 +581,6 @@ let loadEpoch = 0;
    (타이핑 중 자동저장 → realtime 알림 → 전체 재렌더링 → 입력 중이던 textarea가
     새로 만들어지며 커서/포커스가 날아가는 문제를 막기 위함) */
 let lastLocalSaveAt = {biz:0, construction:0};
-let lastRosterSaveAt = {biz:0, construction:0};
 /* 이번 세션에서 서버로부터 정상적으로 데이터를 한 번이라도 불러왔는지 여부.
    로드에 실패한 상태(빈 값)로 저장이 나가면 서버의 실제 데이터를 빈 값으로 덮어써버릴 수 있으므로,
    로드가 성공하기 전까지는 저장을 막는 안전장치로 사용합니다. */
@@ -602,49 +601,29 @@ let loadedOk = {biz:false, construction:false};
    병합한 뒤 저장합니다. 이러면 내가 모르는 사이 다른 사람이 저장한
    다른 인원의 내용은 그대로 보존됩니다. */
 let serverWeekData = {biz:null, construction:null};   // 서버로부터 마지막으로 확인된 최신 데이터
-/* [v2] 칸(필드) 단위 수정 추적.
-   key = 경로 문자열, value = {path:['people',id,'cur'], ver:수정회차}
-   저장할 때는 이 "고친 칸"만 서버 함수(patch_weekly_report)로 보내고,
-   합치는 작업은 DB가 행 잠금 상태에서 처리하므로 동시에 저장해도 서로 덮어쓰지 않습니다. */
-let dirtyFields = {biz:new Map(), construction:new Map()};
-let dirtySeq = 0;
-function pathKey(path){ return path.join('\u0001'); }
-function markDirty(deptKey, path){ dirtyFields[deptKey].set(pathKey(path), {path:path.slice(), ver:++dirtySeq}); }
-function markPersonDirty(deptKey, personId, field){ markDirty(deptKey, ['people', personId, field]); }
-function markExtraDirty(deptKey, field){ markDirty(deptKey, ['extra', field]); }
-function hasDirty(deptKey){ return dirtyFields[deptKey].size > 0; }
-function getAtPath(obj, path){
-  let cur = obj;
-  for(const k of path){ if(cur==null || typeof cur!=='object') return undefined; cur = cur[k]; }
-  return cur;
+let dirtyPeople = {biz:new Set(), construction:new Set()}; // 로컬에서 아직 저장 확정 안 된(수정중) 인원 id 목록
+let dirtyVersion = {biz:{}, construction:{}};          // 인원별 수정 회차(저장 도중 또 수정됐는지 판별용)
+let dirtyExtra = {biz:false, construction:false};      // 근태 보완입력(extra) 수정중 여부
+let dirtyExtraVersion = {biz:0, construction:0};
+
+function markPersonDirty(deptKey, personId){
+  dirtyPeople[deptKey].add(personId);
+  dirtyVersion[deptKey][personId] = (dirtyVersion[deptKey][personId]||0) + 1;
 }
-function setAtPath(obj, path, value){
-  let cur = obj;
-  for(let i=0;i<path.length-1;i++){
-    const k = path[i];
-    if(cur[k]==null || typeof cur[k]!=='object' || Array.isArray(cur[k])) cur[k] = {};
-    cur = cur[k];
-  }
-  cur[path[path.length-1]] = value;
+function markExtraDirty(deptKey){
+  dirtyExtra[deptKey] = true;
+  dirtyExtraVersion[deptKey]++;
 }
-function cloneJson(v){ return v===undefined ? undefined : JSON.parse(JSON.stringify(v)); }
-/* 키 순서와 무관하게 비교하기 위한 문자열화 (DB(jsonb)는 키 순서를 바꿔서 돌려줌) */
-function stableStringify(v){
-  if(v===null || typeof v!=='object') return JSON.stringify(v);
-  if(Array.isArray(v)) return '['+v.map(stableStringify).join(',')+']';
-  return '{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+stableStringify(v[k])).join(',')+'}';
-}
-function isValidWeekData(d){
-  return !!d && typeof d==='object' && !Array.isArray(d) && !!d.people && typeof d.people==='object' && !Array.isArray(d.people);
-}
-/* 서버 최신 데이터를 기준으로, 내가 아직 저장 확정 못 한 칸만 내 값으로 덮어써서 화면용 데이터를 만듭니다. */
+/* 서버에서 받은 최신 데이터(serverData)를 기준으로 삼되, 내가 지금 수정중인
+   인원/근태보완 항목만 로컬 값으로 덮어써서 화면에 쓸 최종 weekData를 만듭니다. */
 function mergeServerWithLocalDirty(deptKey, serverData){
-  const merged = isValidWeekData(serverData) ? cloneJson(serverData) : {people:{}};
-  const local = state[deptKey].weekData || {};
-  dirtyFields[deptKey].forEach(({path})=>{
-    const v = getAtPath(local, path);
-    if(v!==undefined) setAtPath(merged, path, cloneJson(v));
-  });
+  const merged = JSON.parse(JSON.stringify(serverData && serverData.people ? serverData : {people:{}}));
+  if(!merged.people) merged.people = {};
+  const localPeople = (state[deptKey].weekData && state[deptKey].weekData.people) || {};
+  dirtyPeople[deptKey].forEach(pid=>{ if(localPeople[pid]) merged.people[pid] = localPeople[pid]; });
+  if(dirtyExtra[deptKey] && state[deptKey].weekData && state[deptKey].weekData.extra){
+    merged.extra = state[deptKey].weekData.extra;
+  }
   return merged;
 }
 
@@ -656,19 +635,10 @@ function withTimeout(promise, ms=10000){
   ]);
 }
 
-function normalizePerson(pd){
-  if(!pd || typeof pd!=='object' || Array.isArray(pd)) return blankPersonData();
-  ['prev','cur','note'].forEach(k=>{ if(typeof pd[k]!=='string') pd[k]=''; });
-  if(!pd.att || typeof pd.att!=='object' || Array.isArray(pd.att)) pd.att = {};
-  CATS.forEach(c=>{ if(!Array.isArray(pd.att[c])) pd.att[c]=[false,false,false,false,false]; });
-  return pd;
-}
 function ensurePeopleData(deptKey){
   const s = state[deptKey];
-  if(!isValidWeekData(s.weekData)) s.weekData = {people:{}};
-  s.roster.forEach(p=>{ s.weekData.people[p.id] = normalizePerson(s.weekData.people[p.id]); });
-  if(!s.weekData.extra || typeof s.weekData.extra!=='object') s.weekData.extra = {};
-  ['absent','late','halfDay','misc'].forEach(k=>{ if(typeof s.weekData.extra[k]!=='string') s.weekData.extra[k]=''; });
+  s.roster.forEach(p=>{ if(!s.weekData.people[p.id]) s.weekData.people[p.id] = blankPersonData(); });
+  if(!s.weekData.extra) s.weekData.extra = {absent:'', late:'', halfDay:'', misc:''};
 }
 
 function setSaveState(kind){
@@ -677,7 +647,6 @@ function setSaveState(kind){
   const banner = document.getElementById('connBanner');
   if(kind==='saving'){dot.className='dot busy';text.textContent='저장 중...';banner.classList.remove('show');}
   else if(kind==='saved'){dot.className='dot';text.textContent='저장됨';banner.classList.remove('show');}
-  else if(kind==='retrying'){dot.className='dot busy';text.textContent='저장 재시도 중...';}
   else if(kind==='error'){dot.className='dot error';text.textContent='저장 실패';banner.classList.add('show');}
   else if(kind==='loaderror'){dot.className='dot error';text.textContent='불러오기 실패 (새로고침 필요)';banner.classList.add('show');}
   else if(kind==='noconn'){dot.className='dot error';text.textContent='서버 연결 안 됨';banner.classList.add('show');}
@@ -703,13 +672,14 @@ async function loadWeekData(deptKey, monday){
   state[deptKey].weekData = {people:{}};
   weekKeyOf[deptKey] = key;
   serverWeekData[deptKey] = null;
-  dirtyFields[deptKey] = new Map();
+  dirtyPeople[deptKey] = new Set();
+  dirtyExtra[deptKey] = false;
   if(!supabaseClient) return;
   try{
     const {data:row, error} = await withTimeout(supabaseClient.from('weekly_reports').select('data').eq('dept_key', deptKey).eq('week_key', key).maybeSingle());
     if(error) throw error;
     if(weekKeyOf[deptKey] !== key) return; // 그 사이 다른 주차로 이동했으면 결과 버림
-    const data = (row && isValidWeekData(row.data)) ? row.data : {people:{}};
+    const data = (row && row.data) ? row.data : {people:{}};
     state[deptKey].weekData = data;
     serverWeekData[deptKey] = JSON.parse(JSON.stringify(data));
   }catch(e){ console.error(e); loadedOk[deptKey] = false; }
@@ -742,7 +712,7 @@ async function applyCarryOver(deptKey, monday){
        이번 주 "금주 업무 내용"(cur)은 어떤 경우에도 건드리지 않습니다. */
     if((!thisWeek.prev || !thisWeek.prev.trim()) && prevPerson.cur && prevPerson.cur.trim()){
       thisWeek.prev = prevPerson.cur;
-      markPersonDirty(deptKey, p.id, 'prev');
+      markPersonDirty(deptKey, p.id);
       changed = true;
     }
   });
@@ -774,83 +744,41 @@ async function loadAll(monday){
   subscribeRealtime();
 }
 
-/* [v2] 저장: "고친 칸"만 서버 함수로 전송 → DB가 잠금 상태에서 병합.
-   - 같은 부서의 저장은 순서대로 한 줄로 처리(saveChain)해서 순서가 뒤바뀌지 않음
-   - 실패하면 자동 재시도(1·2·4·8초), 그래도 실패하면 10초 뒤 다시 시도
-   - 서버가 돌려준 최신 전체본으로 내 화면을 갱신(다른 사람 내용도 함께 반영) */
-let saveChain = {biz:Promise.resolve(), construction:Promise.resolve()};
-let savesInFlight = 0;
-let retryLaterTimers = {biz:null, construction:null};
-function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
-function anySavePending(){
-  return savesInFlight>0 || DEPTS.some(d=>saveWeekTimers[d] || saveRosterTimers[d]);
-}
-function saveWeekData(deptKey, expectedKey){
-  if(!supabaseClient){ setSaveState('noconn'); return Promise.resolve(); }
-  if(!loadedOk[deptKey]){ console.warn(deptKey+' 로드가 안 된 상태라 저장을 건너뜁니다.'); setSaveState('error'); return Promise.resolve(); }
-  /* 화면에 표시 중인 주차가 아니라, 메모리에 올라와 있는 데이터의 실제 주차에 저장합니다. */
+async function saveWeekData(deptKey, expectedKey){
+  if(!supabaseClient){ setSaveState('noconn'); return; }
+  if(!loadedOk[deptKey]){ console.warn(deptKey+' 로드가 안 된 상태라 저장을 건너뜁니다.'); setSaveState('error'); return; }
+  /* 화면에 표시 중인 주차(currentMonday)가 아니라, 메모리에 올라와 있는 데이터의 실제 주차에 저장합니다.
+     이렇게 해야 주차를 이동하는 도중 저장이 나가도 전주 내용이 금주 칸에 들어가지 않습니다. */
   const key = weekKeyOf[deptKey];
-  if(!key){ console.warn(deptKey+' 주차 정보가 없어 저장을 건너뜁니다.'); return Promise.resolve(); }
-  if(expectedKey && expectedKey !== key){ console.warn('주차가 바뀌어 저장을 취소합니다.'); return Promise.resolve(); }
+  if(!key){ console.warn(deptKey+' 주차 정보가 없어 저장을 건너뜁니다.'); return; }
+  if(expectedKey && expectedKey !== key){ console.warn('주차가 바뀌어 저장을 취소합니다.'); return; }
 
-  /* 지금 이 순간의 "고친 칸"과 그 값을 즉시 캡처 (이후 주차 이동 등으로 메모리가 바뀌어도 안전) */
-  const local = state[deptKey].weekData;
-  const patches = [], sent = [];
-  dirtyFields[deptKey].forEach(e=>{
-    const v = getAtPath(local, e.path);
-    if(v===undefined) return;
-    patches.push({path:e.path, value:cloneJson(v)});
-    sent.push({path:e.path, ver:e.ver});
-  });
-  if(!patches.length) return saveChain[deptKey];
+  /* 지금 이 순간 "내가 수정중"으로 표시된 항목들만 이번 저장에 포함시킵니다.
+     저장이 서버에 도달하는 동안 또 다른 수정이 생기면 그건 다음 저장 라운드에서 처리됩니다. */
+  const dirtySnapshot = new Set(dirtyPeople[deptKey]);
+  const versionSnapshot = {};
+  dirtySnapshot.forEach(pid=>{ versionSnapshot[pid] = dirtyVersion[deptKey][pid]; });
+  const extraDirtySnapshot = dirtyExtra[deptKey];
+  const extraVersionSnapshot = dirtyExtraVersion[deptKey];
 
-  savesInFlight++;
+  /* 서버의 최신 스냅샷 위에 내가 수정중인 항목만 덮어써서 병합 (다른 사람의 변경사항은 보존) */
+  const merged = mergeServerWithLocalDirty(deptKey, serverWeekData[deptKey]);
+
+  lastLocalSaveAt[deptKey] = Date.now();
   setSaveState('saving');
-  const run = async ()=>{
-    let attempt = 0;
-    try{
-      while(true){
-        try{
-          lastLocalSaveAt[deptKey] = Date.now();
-          const {data, error} = await withTimeout(supabaseClient.rpc('patch_weekly_report', {p_dept:deptKey, p_week:key, p_patches:patches}));
-          if(error) throw error;
-          if(weekKeyOf[deptKey] === key){
-            /* 저장이 확정된 칸의 표시를 지움. 단 저장 도중 또 고쳤다면(회차 변경) 다음 저장에 포함되도록 유지 */
-            sent.forEach(e=>{
-              const k = pathKey(e.path), cur = dirtyFields[deptKey].get(k);
-              if(cur && cur.ver === e.ver) dirtyFields[deptKey].delete(k);
-            });
-            if(isValidWeekData(data)) applyServerData(deptKey, key, data);
-          }
-          if(attempt>0 || !weekListHas(key)) refreshWeekList();
-          return true;
-        }catch(e){
-          console.error('저장 실패 (시도 '+(attempt+1)+'회)', e);
-          attempt++;
-          if(attempt >= 5) throw e;
-          setSaveState('retrying');
-          await sleep(1000 * Math.pow(2, attempt-1));
-        }
-      }
-    }catch(e){
-      setSaveState('error');
-      /* 고친 칸 표시는 남아있으므로, 10초 뒤 다시 한 번 시도 */
-      clearTimeout(retryLaterTimers[deptKey]);
-      retryLaterTimers[deptKey] = setTimeout(()=>{ if(weekKeyOf[deptKey]===key && hasDirty(deptKey)) queueSaveWeek(deptKey, key); }, 10000);
-      return false;
-    }finally{
-      savesInFlight--;
-      if(!anySavePending() && document.getElementById('saveText').textContent !== '저장 실패'){
-        setSaveState(currentDept==='combined' ? 'readonly' : 'saved');
-      }
-    }
-  };
-  saveChain[deptKey] = saveChain[deptKey].then(run, run);
-  return saveChain[deptKey];
-}
-function weekListHas(key){
-  const sel = document.getElementById('weekSelect');
-  return !!sel && [...sel.options].some(o=>o.value===key);
+  try{
+    const {error} = await withTimeout(supabaseClient.from('weekly_reports')
+      .upsert({dept_key:deptKey, week_key:key, data:merged, updated_at:new Date().toISOString()}, {onConflict:'dept_key,week_key'}));
+    if(error) throw error;
+    serverWeekData[deptKey] = JSON.parse(JSON.stringify(merged));
+    /* 저장 확정된 항목의 dirty 표시를 지웁니다. 단, 저장이 진행되는 사이 그 항목이
+       또 수정됐다면(버전이 바뀌었다면) 아직 저장 안 된 변경이 남아있는 것이므로
+       dirty 상태를 유지해서 다음 저장 라운드에 포함되도록 합니다. */
+    dirtySnapshot.forEach(pid=>{ if(dirtyVersion[deptKey][pid] === versionSnapshot[pid]) dirtyPeople[deptKey].delete(pid); });
+    if(extraDirtySnapshot && dirtyExtraVersion[deptKey] === extraVersionSnapshot) dirtyExtra[deptKey] = false;
+    setSaveState('saved');
+    refreshWeekList();
+  }catch(e){ console.error(e); setSaveState('error'); }
 }
 function queueSaveWeek(deptKey, expectedKey){
   const key = expectedKey || weekKeyOf[deptKey];
@@ -859,61 +787,10 @@ function queueSaveWeek(deptKey, expectedKey){
   pendingWeekKey[deptKey] = key;
 }
 
-/* 서버에서 받은 최신본을 반영 (내가 아직 저장 못 한 칸은 내 값 유지). 화면 내용이 실제로 달라졌을 때만 다시 그림 */
-function applyServerData(deptKey, key, data){
-  if(weekKeyOf[deptKey] !== key || !isValidWeekData(data)) return;
-  serverWeekData[deptKey] = cloneJson(data);
-  const before = stableStringify(state[deptKey].weekData);
-  state[deptKey].weekData = mergeServerWithLocalDirty(deptKey, data);
-  ensurePeopleData(deptKey);
-  if(stableStringify(state[deptKey].weekData) !== before) applyRenderSafely();
-}
-
-/* 서버에서 해당 주차를 다시 읽어와 화면을 최신화 (실시간 알림을 놓쳤을 때를 대비) */
-async function fetchWeekRow(deptKey, key){
-  try{
-    const {data:row, error} = await withTimeout(supabaseClient.from('weekly_reports').select('data').eq('dept_key', deptKey).eq('week_key', key).maybeSingle());
-    if(error) throw error;
-    return {ok:true, data: (row && row.data) ? row.data : {people:{}}};
-  }catch(e){ console.error(e); return {ok:false}; }
-}
-let resyncTimers = {biz:null, construction:null};
-function scheduleResync(deptKey, delay=300){
-  clearTimeout(resyncTimers[deptKey]);
-  resyncTimers[deptKey] = setTimeout(()=>{ resyncTimers[deptKey]=null; resyncWeek(deptKey); }, delay);
-}
-async function resyncWeek(deptKey){
-  if(!supabaseClient || !loadedOk[deptKey]) return;
-  const key = weekKeyOf[deptKey];
-  if(!key) return;
-  const r = await fetchWeekRow(deptKey, key);
-  if(!r.ok || !isValidWeekData(r.data)) return; // 실패하거나 이상한 응답은 무시 (화면을 비우지 않음)
-  applyServerData(deptKey, key, r.data);
-}
-let loadingAll = false;
-async function resyncAll(){
-  if(!supabaseClient || loadingAll) return;
-  if(!DEPTS.every(d=>loadedOk[d])){
-    /* 처음 불러오기에 실패했던 상태라면 전체를 다시 불러옴 */
-    loadingAll = true;
-    try{ await loadAll(currentMonday); } finally { loadingAll = false; }
-    return;
-  }
-  for(const d of DEPTS){
-    if(!saveRosterTimers[d]){
-      const latest = await fetchLatestRoster(d);
-      if(stableStringify(latest) !== stableStringify(state[d].roster)){
-        state[d].roster = latest; ensurePeopleData(d); applyRenderSafely();
-      }
-    }
-    resyncWeek(d);
-  }
-}
-
 async function saveRoster(deptKey){
   if(!supabaseClient){ setSaveState('noconn'); return; }
   if(!loadedOk[deptKey]){ console.warn(deptKey+' 로드가 안 된 상태라 저장을 건너뜁니다.'); setSaveState('error'); return; }
-  lastRosterSaveAt[deptKey] = Date.now();
+  lastLocalSaveAt[deptKey] = Date.now();
   setSaveState('saving');
   try{
     const {error} = await withTimeout(supabaseClient.from('rosters')
@@ -968,37 +845,38 @@ async function addRosterPerson(deptKey){
 
 let rosterDragId = null;
 
-let rtWasDown = false;
 function subscribeRealtime(){
   if(!supabaseClient) return;
   if(rtChannel){ supabaseClient.removeChannel(rtChannel); rtChannel = null; }
   const key = isoKey(currentMonday);
   rtChannel = supabaseClient.channel('pm_room_'+key)
     .on('postgres_changes', {event:'*', schema:'public', table:'weekly_reports'}, (payload)=>{
-      /* [v2] 알림에 담긴 데이터를 그대로 믿지 않고(용량 초과 시 잘려오거나 비어올 수 있음),
-         알림은 "바뀌었다"는 신호로만 쓰고 실제 내용은 서버에서 다시 읽어옵니다. */
-      const row = (payload.new && Object.keys(payload.new).length) ? payload.new : payload.old;
-      if(!row || !row.dept_key){ DEPTS.forEach(d=>scheduleResync(d)); return; }
+      const row = payload.new;
+      if(!row || row.week_key !== key) return;
       if(!DEPTS.includes(row.dept_key)) return;
-      if(row.week_key && String(row.week_key).slice(0,10) !== key) return;
-      scheduleResync(row.dept_key);
+      /* 서버 최신본은 항상 최신 상태로 갱신(내가 지금 수정중인 항목이 있어도
+         "서버가 알고있는 최신값" 자체는 계속 추적해야 다음 저장 때 병합 기준으로 쓸 수 있습니다). */
+      serverWeekData[row.dept_key] = row.data || {people:{}};
+      /* 화면/메모리에 반영할 때는 서버 최신값 위에 "내가 지금 수정중인" 항목만
+         내 로컬 값으로 덮어써서 병합합니다. 이러면 남이 저장한 다른 사람의
+         내용은 즉시 반영되고, 내가 타이핑 중인 내용은 사라지지 않습니다. */
+      state[row.dept_key].weekData = mergeServerWithLocalDirty(row.dept_key, row.data);
+      weekKeyOf[row.dept_key] = row.week_key;
+      ensurePeopleData(row.dept_key);
+      /* 내가 방금(2.5초 이내) 저장을 보낸 부서라면, 이건 그 저장이 메아리처럼
+         되돌아온 것뿐이라 다시 그릴 필요는 없습니다 (이미 최신 화면임). */
+      if(Date.now() - lastLocalSaveAt[row.dept_key] < 2500) return;
+      applyRenderSafely();
     })
     .on('postgres_changes', {event:'*', schema:'public', table:'rosters'}, (payload)=>{
       const row = payload.new;
-      if(!row || !DEPTS.includes(row.dept_key) || !Array.isArray(row.people)) return;
-      if(Date.now() - lastRosterSaveAt[row.dept_key] < 2500) return;
-      state[row.dept_key].roster = row.people;
+      if(!row || !DEPTS.includes(row.dept_key)) return;
+      if(Date.now() - lastLocalSaveAt[row.dept_key] < 2500) return;
+      state[row.dept_key].roster = row.people || [];
       ensurePeopleData(row.dept_key);
       applyRenderSafely();
     })
-    .subscribe((status)=>{
-      if(status==='SUBSCRIBED'){
-        if(rtWasDown) resyncAll(); // 끊겼다가 다시 연결되면 그 사이 바뀐 내용을 다시 받아옴
-        rtWasDown = false;
-      }else if(status==='CHANNEL_ERROR' || status==='TIMED_OUT' || status==='CLOSED'){
-        rtWasDown = true;
-      }
-    });
+    .subscribe();
 }
 
 /* 다른 사람이 편집한 내용이 실시간으로 들어왔을 때, 지금 내가 어딘가에
@@ -1007,19 +885,19 @@ function subscribeRealtime(){
    자동으로 최신 내용을 반영합니다. 이렇게 하면 다른 사람 편집 때문에
    내가 타이핑하던 중간에 화면이 리셋되는 일이 없습니다. */
 let deferredRenderPending = false;
-function isEditingField(){
-  const el = document.activeElement;
-  return !!el && (el.tagName==='TEXTAREA' || (el.tagName==='INPUT' && el.type!=='checkbox'));
-}
 function applyRenderSafely(){
-  if(!isEditingField()){ renderAll(); loadReportExtraInputs(); return; }
-  /* 입력 중이면 그 칸에서 벗어날 때까지 미뤘다가 반영 (한글 입력 중 화면이 리셋되는 것 방지) */
+  const el = document.activeElement;
+  const isTyping = el && (el.tagName==='TEXTAREA' || el.tagName==='INPUT');
+  if(!isTyping){ renderAll(); return; }
   if(deferredRenderPending) return;
   deferredRenderPending = true;
-  document.activeElement.addEventListener('blur', ()=>{
+  const onDone = ()=>{
     deferredRenderPending = false;
-    setTimeout(applyRenderSafely, 0);
-  }, {once:true});
+    el.removeEventListener('blur', onDone);
+    renderAll();
+  };
+  el.addEventListener('blur', onDone, {once:true});
+  setTimeout(()=>{ if(deferredRenderPending) onDone(); }, 3000);
 }
 
 /* ---------------- 렌더링 ---------------- */
@@ -1072,7 +950,7 @@ function renderWork(deptKey){
     tbody.appendChild(tr);
   });
   tbody.querySelectorAll('textarea').forEach(el=>{
-    el.addEventListener('input', ()=>{ state[deptKey].weekData.people[el.dataset.id][el.dataset.field]=el.value; markPersonDirty(deptKey, el.dataset.id, el.dataset.field); queueSaveWeek(deptKey); });
+    el.addEventListener('input', ()=>{ state[deptKey].weekData.people[el.dataset.id][el.dataset.field]=el.value; markPersonDirty(deptKey, el.dataset.id); queueSaveWeek(deptKey); });
   });
 }
 
@@ -1087,7 +965,7 @@ function renderNote(deptKey){
     tbody.appendChild(tr);
   });
   tbody.querySelectorAll('textarea').forEach(el=>{
-    el.addEventListener('input', ()=>{ state[deptKey].weekData.people[el.dataset.id][el.dataset.field]=el.value; markPersonDirty(deptKey, el.dataset.id, el.dataset.field); queueSaveWeek(deptKey); });
+    el.addEventListener('input', ()=>{ state[deptKey].weekData.people[el.dataset.id][el.dataset.field]=el.value; markPersonDirty(deptKey, el.dataset.id); queueSaveWeek(deptKey); });
   });
 }
 
@@ -1111,7 +989,7 @@ function renderAtt(deptKey){
   tbody.querySelectorAll('input[type=checkbox]').forEach(el=>{
     el.addEventListener('change', ()=>{
       state[deptKey].weekData.people[el.dataset.id].att[el.dataset.cat][+el.dataset.day] = el.checked;
-      markDirty(deptKey, ['people', el.dataset.id, 'att', el.dataset.cat]);
+      markPersonDirty(deptKey, el.dataset.id);
       renderSummary(deptKey);
       queueSaveWeek(deptKey);
     });
@@ -1300,22 +1178,7 @@ function flushPendingSaves(){
     if(saveRosterTimers[d]){ clearTimeout(saveRosterTimers[d]); saveRosterTimers[d]=null; saveRoster(d); }
   });
 }
-window.addEventListener('beforeunload', (e)=>{
-  flushPendingSaves();
-  /* 아직 서버에 저장 확정 안 된 내용이 있으면 "페이지를 나가시겠습니까?" 경고 */
-  if(DEPTS.some(d=>hasDirty(d))){ e.preventDefault(); e.returnValue = ''; }
-});
-/* 탭으로 돌아오거나 인터넷이 다시 연결되면 최신 내용 다시 받기 + 밀린 저장 처리 */
-document.addEventListener('visibilitychange', ()=>{
-  if(document.visibilityState==='visible') resyncAll();
-  else flushPendingSaves();
-});
-window.addEventListener('online', ()=>{
-  resyncAll();
-  DEPTS.forEach(d=>{ if(hasDirty(d)) queueSaveWeek(d); });
-});
-/* 실시간 알림을 놓치는 경우에 대비해 30초마다 최신본 확인 (화면이 보일 때만) */
-setInterval(()=>{ if(document.visibilityState==='visible') resyncAll(); }, 30000);
+window.addEventListener('beforeunload', ()=>{ flushPendingSaves(); });
 
 document.querySelectorAll('.dept-btn').forEach(btn=>{
   btn.addEventListener('click', async ()=>{
@@ -1349,9 +1212,9 @@ document.querySelectorAll('[data-clear]').forEach(btn=>{
     if(!confirm('이번 주 데이터를 정말 초기화하시겠습니까?')) return;
     state[deptKey].roster.forEach(p=>{
       const pd = state[deptKey].weekData.people[p.id];
-      if(scope==='work'){ pd.prev=''; pd.cur=''; markPersonDirty(deptKey, p.id, 'prev'); markPersonDirty(deptKey, p.id, 'cur'); }
-      if(scope==='note'){ pd.note=''; markPersonDirty(deptKey, p.id, 'note'); }
-      if(scope==='att'){ CATS.forEach(c=>{ pd.att[c]=[false,false,false,false,false]; markDirty(deptKey, ['people', p.id, 'att', c]); }); }
+      if(scope==='work'){ pd.prev=''; pd.cur=''; }
+      if(scope==='note'){ pd.note=''; }
+      if(scope==='att'){ CATS.forEach(c=> pd.att[c]=[false,false,false,false,false]); }
     });
     renderAll();
     queueSaveWeek(deptKey);
@@ -1406,7 +1269,7 @@ function attachReportExtraListeners(){
       if(deptKey==='combined') return; // 통합 화면은 조회 전용이라 별도 저장 안 함
       if(!state[deptKey].weekData.extra) state[deptKey].weekData.extra = {absent:'',late:'',halfDay:'',misc:''};
       state[deptKey].weekData.extra[field] = e.target.value;
-      markExtraDirty(deptKey, field);
+      markExtraDirty(deptKey);
       queueSaveWeek(deptKey);
     });
   });
